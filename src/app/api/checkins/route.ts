@@ -105,32 +105,38 @@ export async function POST(request: Request) {
 
     if (checkinError) throw checkinError;
 
-    // 6. Return immediately (don't wait for blockchain)
+    // 6. Submit to Stellar and wait for confirmation
+    let txHash: string | null = null;
+    let onchainStatus: "PENDING" | "SUCCESS" | "FAILED" = "PENDING";
+
+    try {
+      const result = await recordOnChain(recordHash, trustedSessionId, timestamp);
+      txHash = result.txHash;
+      onchainStatus = "SUCCESS";
+
+      await admin
+        .from("checkins")
+        .update({ onchain_status: "SUCCESS", tx_hash: txHash })
+        .eq("id", checkin.id);
+    } catch (err) {
+      console.error("On-chain recording failed:", err);
+      onchainStatus = "FAILED";
+
+      await admin
+        .from("checkins")
+        .update({ onchain_status: "FAILED" })
+        .eq("id", checkin.id);
+    }
+
     const response: CheckinResponse = {
       checkinId: checkin.id,
       recordHash,
       onchain: {
-        status: "PENDING",
-        txHash: null,
+        status: onchainStatus,
+        txHash,
       },
       verifyUrl: `${APP_URL}/verify/${recordHash}`,
     };
-
-    // 7. Fire-and-forget: submit to Soroban in background
-    recordOnChain(recordHash, trustedSessionId, timestamp)
-      .then(async ({ txHash }) => {
-        await admin
-          .from("checkins")
-          .update({ onchain_status: "SUCCESS", tx_hash: txHash })
-          .eq("id", checkin.id);
-      })
-      .catch(async (err) => {
-        console.error("On-chain recording failed:", err);
-        await admin
-          .from("checkins")
-          .update({ onchain_status: "FAILED" })
-          .eq("id", checkin.id);
-      });
 
     return NextResponse.json(response, { status: 201 });
   } catch (err) {
