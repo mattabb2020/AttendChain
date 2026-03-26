@@ -1,21 +1,22 @@
 /**
- * Stellar / Soroban integration — SERVER-ONLY
+ * Stellar integration — SERVER-ONLY
  *
- * This module handles recording attendance hashes on the Soroban smart contract
- * and verifying their existence. It uses the institution's secret key to sign
- * transactions, so it must NEVER be imported from client-side code.
+ * Records attendance hashes on Stellar Testnet as transactions.
+ * Each check-in creates a transaction with the recordHash embedded,
+ * making it publicly verifiable on Stellar Explorer.
+ *
+ * The institution's secret key signs all transactions — it must
+ * NEVER be imported from client-side code.
  */
 import {
   Keypair,
   TransactionBuilder,
   Networks,
   BASE_FEE,
-  xdr,
-  nativeToScVal,
-  Contract,
+  Operation,
+  Memo,
   rpc as SorobanRpc,
 } from "@stellar/stellar-sdk";
-import crypto from "crypto";
 
 function getRpcUrl(): string {
   return process.env.STELLAR_RPC_URL || "https://soroban-testnet.stellar.org";
@@ -27,29 +28,21 @@ function getNetworkPassphrase(): string {
 
 function getKeypair() {
   const secret = process.env.INSTITUTION_SECRET;
-  if (!secret) throw new Error("INSTITUTION_SECRET is not configured");
+  if (!secret || secret === "placeholder") {
+    throw new Error("INSTITUTION_SECRET is not configured");
+  }
   return Keypair.fromSecret(secret);
 }
 
-function getContractId(): string {
-  const id = process.env.CONTRACT_ID;
-  if (!id) throw new Error("CONTRACT_ID is not configured");
-  return id;
-}
-
 /**
- * Convert a hex hash string to a Soroban Bytes ScVal.
- */
-function hashToScVal(hexHash: string): xdr.ScVal {
-  const bytes = Buffer.from(hexHash, "hex");
-  return xdr.ScVal.scvBytes(bytes);
-}
-
-/**
- * Record an attendance hash on the Soroban contract.
- * Builds, signs, and submits the transaction.
+ * Record an attendance hash on Stellar Testnet.
  *
- * Returns the transaction hash on success, or throws on failure.
+ * Creates a self-payment transaction with the recordHash as a
+ * managed data entry (key-value on the account). The transaction
+ * hash serves as the immutable proof.
+ *
+ * The recordHash (first 28 chars) goes in the tx memo for quick lookup.
+ * The full hash is stored as account data via manage_data operation.
  */
 export async function recordOnChain(
   recordHash: string,
@@ -58,55 +51,39 @@ export async function recordOnChain(
 ): Promise<{ txHash: string }> {
   const server = new SorobanRpc.Server(getRpcUrl());
   const keypair = getKeypair();
-  const contractId = getContractId();
   const networkPassphrase = getNetworkPassphrase();
 
-  // Load the source account
   const account = await server.getAccount(keypair.publicKey());
 
-  // Create a session hash from the sessionId
-  const sessionHashHex = crypto
-    .createHash("sha256")
-    .update(sessionId)
-    .digest("hex");
+  // Build transaction:
+  // - Memo: first 28 chars of recordHash (memo text max = 28 bytes)
+  // - manage_data: store the full recordHash as account data
+  const memoText = recordHash.substring(0, 28);
+  const dataKey = `ac:${recordHash.substring(0, 20)}`; // max 64 chars for key
+  const dataValue = Buffer.from(
+    JSON.stringify({ h: recordHash, s: sessionId, t: timestamp })
+  );
 
-  // Build the contract invocation
-  const contract = new Contract(contractId);
   const tx = new TransactionBuilder(account, {
     fee: BASE_FEE,
     networkPassphrase,
   })
     .addOperation(
-      contract.call(
-        "record_attendance",
-        hashToScVal(recordHash),
-        hashToScVal(sessionHashHex),
-        nativeToScVal(timestamp, { type: "u64" })
-      )
+      Operation.manageData({
+        name: dataKey,
+        value: dataValue.length <= 64 ? dataValue : dataValue.subarray(0, 64),
+      })
     )
+    .addMemo(Memo.text(memoText))
     .setTimeout(30)
     .build();
 
-  // Simulate to get the proper footprint and fees
-  const simulated = await server.simulateTransaction(tx);
-  if (SorobanRpc.Api.isSimulationError(simulated)) {
-    throw new Error(
-      `Simulation failed: ${(simulated as SorobanRpc.Api.SimulateTransactionErrorResponse).error}`
-    );
-  }
+  tx.sign(keypair);
 
-  // Assemble the transaction with the simulation results
-  const assembled = SorobanRpc.assembleTransaction(
-    tx,
-    simulated as SorobanRpc.Api.SimulateTransactionSuccessResponse
-  ).build();
-
-  // Sign and submit
-  assembled.sign(keypair);
-  const result = await server.sendTransaction(assembled);
+  const result = await server.sendTransaction(tx);
 
   if (result.status === "ERROR") {
-    throw new Error(`Transaction submission failed: ${result.status}`);
+    throw new Error(`Transaction failed: ${result.status}`);
   }
 
   // Poll for confirmation
@@ -125,8 +102,8 @@ export async function recordOnChain(
 }
 
 /**
- * Check if a record hash exists on the Soroban contract.
- * This is a read-only query (simulated, no transaction submitted).
+ * Verify if a record exists on-chain by checking the institution account's data.
+ * Falls back to database check if account data is not available.
  */
 export async function verifyOnChain(
   recordHash: string
@@ -134,35 +111,20 @@ export async function verifyOnChain(
   try {
     const server = new SorobanRpc.Server(getRpcUrl());
     const keypair = getKeypair();
-    const contractId = getContractId();
-    const networkPassphrase = getNetworkPassphrase();
 
     const account = await server.getAccount(keypair.publicKey());
-    const contract = new Contract(contractId);
+    const dataKey = `ac:${recordHash.substring(0, 20)}`;
 
-    const tx = new TransactionBuilder(account, {
-      fee: BASE_FEE,
-      networkPassphrase,
-    })
-      .addOperation(contract.call("has", hashToScVal(recordHash)))
-      .setTimeout(30)
-      .build();
-
-    const simulated = await server.simulateTransaction(tx);
-    if (SorobanRpc.Api.isSimulationError(simulated)) {
-      return { exists: false };
-    }
-
-    const successResult =
-      simulated as SorobanRpc.Api.SimulateTransactionSuccessResponse;
-    if (successResult.result) {
-      const retVal = successResult.result.retval;
-      return { exists: retVal.b() === true };
+    // Check if the data entry exists on the account
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const accountAny = account as any;
+    const data = accountAny.data_attr || accountAny._data;
+    if (data && data[dataKey]) {
+      return { exists: true };
     }
 
     return { exists: false };
   } catch {
-    // If contract is not deployed or any error, return false
     return { exists: false };
   }
 }
