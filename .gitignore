@@ -34,3 +34,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# reference files (not part of the app)
+/Initial Files/
+/Stitch/
+
+# soroban build artifacts
+/soroban-contract/target/
