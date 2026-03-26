@@ -1,4 +1,4 @@
-import { createAdminSupabase } from "@/lib/supabase/server";
+import { createServerSupabase, createAdminSupabase } from "@/lib/supabase/server";
 import { validateQrToken } from "@/lib/qr";
 import { generateRecordHash } from "@/lib/hash";
 import { recordOnChain } from "@/lib/stellar";
@@ -7,28 +7,35 @@ import { NextResponse } from "next/server";
 import type { CheckinResponse } from "@/types";
 
 /**
- * POST /api/checkins — The main check-in endpoint.
+ * POST /api/checkins — Check-in endpoint (requires authenticated student).
  *
  * Flow:
- * 1. Validate QR token (HMAC + slot + expiry)
- * 2. Verify session is OPEN
- * 3. Create attendee record
- * 4. Compute recordHash = SHA-256(sessionId | attendeeId | timestamp)
- * 5. Insert checkin row as PENDING
- * 6. Return immediately with recordHash
- * 7. In background: submit to Soroban → update status
+ * 1. Verify student is authenticated
+ * 2. Validate QR token (HMAC + slot + expiry)
+ * 3. Verify session is OPEN
+ * 4. Create attendee record linked to student's user_id
+ * 5. Compute recordHash
+ * 6. Insert checkin as PENDING
+ * 7. Submit to Stellar → update to SUCCESS/FAILED
  */
 export async function POST(request: Request) {
   try {
-    const { displayName, qrToken } = await request.json();
+    const { qrToken } = await request.json();
 
-    // Validate inputs
-    if (!displayName || displayName.trim().length === 0) {
+    // 1. Verify student is authenticated
+    const supabase = createServerSupabase();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
       return NextResponse.json(
-        { error: ERRORS.NAME_REQUIRED },
-        { status: 400 }
+        { error: ERRORS.AUTH_REQUIRED },
+        { status: 401 }
       );
     }
+
+    const studentName = user.user_metadata?.name || user.email || "Estudiante";
 
     if (!qrToken) {
       return NextResponse.json(
@@ -37,7 +44,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Validate QR token
+    // 2. Validate QR token
     const payload = validateQrToken(qrToken, QR_SECRET);
     if (!payload) {
       return NextResponse.json(
@@ -46,14 +53,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Use sessionId from QR token (trusted, server-signed)
     const trustedSessionId = payload.sid;
 
-    // 2. Verify session is still OPEN
+    // 3. Verify session is still OPEN
     const admin = createAdminSupabase();
     const { data: session, error: sessionError } = await admin
       .from("sessions")
-      .select("id, status, qr_rotation_seconds")
+      .select("id, status")
       .eq("id", trustedSessionId)
       .single();
 
@@ -71,19 +77,35 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Create attendee record
+    // Check if student already checked in to this session
+    const { data: existingAttendee } = await admin
+      .from("attendees")
+      .select("id")
+      .eq("session_id", trustedSessionId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (existingAttendee) {
+      return NextResponse.json(
+        { error: "Ya registraste tu asistencia en esta sesión." },
+        { status: 409 }
+      );
+    }
+
+    // 4. Create attendee record linked to user
     const { data: attendee, error: attendeeError } = await admin
       .from("attendees")
       .insert({
         session_id: trustedSessionId,
-        display_name: displayName.trim(),
+        display_name: studentName,
+        user_id: user.id,
       })
       .select()
       .single();
 
     if (attendeeError) throw attendeeError;
 
-    // 4. Compute record hash
+    // 5. Compute record hash
     const timestamp = Date.now();
     const recordHash = generateRecordHash(
       trustedSessionId,
@@ -91,7 +113,7 @@ export async function POST(request: Request) {
       timestamp
     );
 
-    // 5. Insert checkin as PENDING
+    // 6. Insert checkin as PENDING
     const { data: checkin, error: checkinError } = await admin
       .from("checkins")
       .insert({
@@ -105,7 +127,7 @@ export async function POST(request: Request) {
 
     if (checkinError) throw checkinError;
 
-    // 6. Submit to Stellar and wait for confirmation
+    // 7. Submit to Stellar and wait
     let txHash: string | null = null;
     let onchainStatus: "PENDING" | "SUCCESS" | "FAILED" = "PENDING";
 
@@ -131,10 +153,7 @@ export async function POST(request: Request) {
     const response: CheckinResponse = {
       checkinId: checkin.id,
       recordHash,
-      onchain: {
-        status: onchainStatus,
-        txHash,
-      },
+      onchain: { status: onchainStatus, txHash },
       verifyUrl: `${APP_URL}/verify/${recordHash}`,
     };
 

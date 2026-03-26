@@ -46,10 +46,10 @@ export default function Home() {
               Crear sesión
             </Link>
             <Link
-              href="/join"
+              href="/auth/register"
               className="w-full sm:w-auto px-8 py-4 bg-secondary text-on-primary rounded-xl font-semibold hover:scale-[0.98] transition-all shadow-lg shadow-secondary/20 text-center"
             >
-              Unirse
+              Registrarse
             </Link>
             <Link
               href="/verify"

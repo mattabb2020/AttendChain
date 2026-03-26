@@ -1,10 +1,40 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 export default function PageShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<{
+    role: string;
+    name: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUser({
+          role: user.user_metadata?.role || "organizer",
+          name: user.user_metadata?.name || user.email || "",
+        });
+      }
+    });
+  }, []);
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setUser(null);
+    router.push("/");
+    router.refresh();
+  };
+
+  const isStudent = user?.role === "student";
+  const isOrganizer = user?.role === "organizer";
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
@@ -19,8 +49,8 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-8">
-          {/* Stellar Live indicator */}
+        <nav className="hidden md:flex items-center gap-6">
+          {/* Stellar Live */}
           <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10">
             <span className="w-2 h-2 rounded-full bg-secondary animate-network-pulse" />
             <span className="text-[10px] font-label font-bold text-secondary uppercase tracking-wider">
@@ -28,36 +58,49 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
             </span>
           </div>
 
-          <Link
-            href="/"
-            className={`text-sm font-semibold px-3 py-1 rounded-lg transition-colors ${
-              pathname === "/"
-                ? "text-primary"
-                : "text-on-surface-variant hover:bg-surface-container-low"
-            }`}
-          >
-            Home
-          </Link>
-          <Link
-            href="/organizer/sessions/open"
-            className={`text-sm font-semibold px-3 py-1 rounded-lg transition-colors ${
-              pathname.startsWith("/organizer")
-                ? "text-primary"
-                : "text-on-surface-variant hover:bg-surface-container-low"
-            }`}
-          >
-            Sesiones
-          </Link>
-          <Link
-            href="/verify"
-            className={`text-sm font-semibold px-3 py-1 rounded-lg transition-colors ${
-              pathname.startsWith("/verify")
-                ? "text-primary"
-                : "text-on-surface-variant hover:bg-surface-container-low"
-            }`}
-          >
-            Verificar
-          </Link>
+          {/* Not logged in */}
+          {!user && (
+            <>
+              <Link href="/" className={navLink(pathname === "/")}>Home</Link>
+              <Link href="/verify" className={navLink(pathname.startsWith("/verify"))}>Verificar</Link>
+              <Link href="/auth/login" className="px-4 py-2 bg-primary text-on-primary rounded-xl text-sm font-semibold hover:scale-[0.98] transition-all">
+                Iniciar Sesión
+              </Link>
+            </>
+          )}
+
+          {/* Student */}
+          {isStudent && (
+            <>
+              <Link href="/student/scan" className={navLink(pathname === "/student/scan")}>
+                Escanear QR
+              </Link>
+              <Link href="/student/profile" className={navLink(pathname === "/student/profile")}>
+                Mi Perfil
+              </Link>
+              <Link href="/verify" className={navLink(pathname.startsWith("/verify"))}>
+                Verificar
+              </Link>
+              <button onClick={handleLogout} className="text-sm text-on-surface-variant hover:text-tertiary transition-colors">
+                Salir
+              </button>
+            </>
+          )}
+
+          {/* Organizer */}
+          {isOrganizer && (
+            <>
+              <Link href="/organizer/sessions/open" className={navLink(pathname.startsWith("/organizer"))}>
+                Sesiones
+              </Link>
+              <Link href="/verify" className={navLink(pathname.startsWith("/verify"))}>
+                Verificar
+              </Link>
+              <button onClick={handleLogout} className="text-sm text-on-surface-variant hover:text-tertiary transition-colors">
+                Salir
+              </button>
+            </>
+          )}
         </nav>
       </header>
 
@@ -73,41 +116,42 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
 
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface/80 glass-effect px-4 py-2 flex justify-around">
-        <Link
-          href="/"
-          className="flex flex-col items-center gap-1 text-on-surface-variant"
-        >
-          <span className="material-symbols-outlined text-[20px]">home</span>
-          <span className="text-[10px] font-label">Home</span>
-        </Link>
-        <Link
-          href="/organizer/sessions/open"
-          className="flex flex-col items-center gap-1 text-on-surface-variant"
-        >
-          <span className="material-symbols-outlined text-[20px]">
-            qr_code_scanner
-          </span>
-          <span className="text-[10px] font-label">Sesiones</span>
-        </Link>
-        <Link
-          href="/join"
-          className="flex flex-col items-center gap-1 text-on-surface-variant"
-        >
-          <span className="material-symbols-outlined text-[20px]">
-            person_add
-          </span>
-          <span className="text-[10px] font-label">Unirse</span>
-        </Link>
-        <Link
-          href="/verify"
-          className="flex flex-col items-center gap-1 text-on-surface-variant"
-        >
-          <span className="material-symbols-outlined text-[20px]">
-            verified
-          </span>
-          <span className="text-[10px] font-label">Verificar</span>
-        </Link>
+        {!user && (
+          <>
+            <MobileNavItem href="/" icon="home" label="Home" active={pathname === "/"} />
+            <MobileNavItem href="/verify" icon="verified" label="Verificar" active={pathname.startsWith("/verify")} />
+            <MobileNavItem href="/auth/login" icon="login" label="Ingresar" active={pathname.startsWith("/auth")} />
+          </>
+        )}
+        {isStudent && (
+          <>
+            <MobileNavItem href="/student/scan" icon="qr_code_scanner" label="Escanear" active={pathname === "/student/scan"} />
+            <MobileNavItem href="/student/profile" icon="person" label="Perfil" active={pathname === "/student/profile"} />
+            <MobileNavItem href="/verify" icon="verified" label="Verificar" active={pathname.startsWith("/verify")} />
+          </>
+        )}
+        {isOrganizer && (
+          <>
+            <MobileNavItem href="/organizer/sessions/open" icon="qr_code_scanner" label="Sesiones" active={pathname.startsWith("/organizer")} />
+            <MobileNavItem href="/verify" icon="verified" label="Verificar" active={pathname.startsWith("/verify")} />
+          </>
+        )}
       </nav>
     </div>
+  );
+}
+
+function navLink(active: boolean) {
+  return `text-sm font-semibold px-3 py-1 rounded-lg transition-colors ${
+    active ? "text-primary" : "text-on-surface-variant hover:bg-surface-container-low"
+  }`;
+}
+
+function MobileNavItem({ href, icon, label, active }: { href: string; icon: string; label: string; active: boolean }) {
+  return (
+    <Link href={href} className={`flex flex-col items-center gap-1 ${active ? "text-primary" : "text-on-surface-variant"}`}>
+      <span className="material-symbols-outlined text-[20px]">{icon}</span>
+      <span className="text-[10px] font-label">{label}</span>
+    </Link>
   );
 }

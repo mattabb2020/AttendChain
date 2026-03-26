@@ -25,15 +25,27 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh the auth session (important for server components)
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect /organizer/* routes — redirect to login if not authenticated
-  if (!user && request.nextUrl.pathname.startsWith("/organizer")) {
+  const path = request.nextUrl.pathname;
+
+  // Protect /organizer/* and /student/* routes
+  if (!user && (path.startsWith("/organizer") || path.startsWith("/student"))) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
+    return NextResponse.redirect(url);
+  }
+
+  // Redirect /join to /student/scan (no more anonymous check-in)
+  if (path === "/join") {
+    const url = request.nextUrl.clone();
+    if (user) {
+      url.pathname = "/student/scan";
+    } else {
+      url.pathname = "/auth/login";
+    }
     return NextResponse.redirect(url);
   }
 
@@ -42,7 +54,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Run on all routes except static files and api
     "/((?!_next/static|_next/image|favicon.ico|logo.jpeg|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

@@ -25,8 +25,11 @@ export async function POST(request: Request) {
       );
     }
 
+    const role = data.user.user_metadata?.role || "organizer";
+    const name = data.user.user_metadata?.name || "";
+
     return NextResponse.json({
-      user: { id: data.user.id, email: data.user.email },
+      user: { id: data.user.id, email: data.user.email, role, name },
     });
   } catch {
     return NextResponse.json(
