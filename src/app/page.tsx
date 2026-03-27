@@ -1,7 +1,41 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import PageShell from "@/components/layout/PageShell";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Home() {
+  const router = useRouter();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        const role = user.user_metadata?.role;
+        if (role === "student") {
+          router.replace("/student/scan");
+        } else {
+          router.replace("/organizer/dashboard");
+        }
+      } else {
+        setChecking(false);
+      }
+    });
+  }, [router]);
+
+  if (checking) {
+    return (
+      <PageShell>
+        <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
+          <p className="text-sm text-on-surface-variant">Cargando...</p>
+        </div>
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell>
       {/* Hero Section */}
@@ -40,22 +74,22 @@ export default function Home() {
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <Link
-              href="/organizer/sessions/open"
+              href="/auth/register"
               className="w-full sm:w-auto px-8 py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-xl font-semibold shadow-lg shadow-primary/20 hover:scale-[0.98] transition-all text-center"
             >
-              Crear sesión
+              Crear Cuenta
             </Link>
             <Link
-              href="/auth/register"
+              href="/auth/login"
               className="w-full sm:w-auto px-8 py-4 bg-secondary text-on-primary rounded-xl font-semibold hover:scale-[0.98] transition-all shadow-lg shadow-secondary/20 text-center"
             >
-              Registrarse
+              Ingresar
             </Link>
             <Link
               href="/verify"
               className="w-full sm:w-auto px-8 py-4 text-primary font-semibold hover:bg-primary/5 rounded-xl transition-all border border-primary/20 text-center"
             >
-              Verificar recordHash
+              Verificar Registro
             </Link>
           </div>
         </div>
@@ -73,12 +107,12 @@ export default function Home() {
             {
               icon: "link",
               title: "Prueba On-Chain",
-              desc: "Cada asistencia genera un hash SHA-256 que se ancla en la blockchain de Stellar vía Soroban.",
+              desc: "Cada asistencia genera un hash SHA-256 que se ancla en la blockchain de Stellar.",
             },
             {
               icon: "verified",
               title: "Verificación Pública",
-              desc: "Cualquier persona puede verificar un registro con el recordHash. Transparencia total.",
+              desc: "Cualquier persona puede verificar un registro. Transparencia total.",
             },
           ].map((f) => (
             <div

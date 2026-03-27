@@ -34,7 +34,7 @@ export default function LoginPage() {
 
       // Redirect based on role
       const role = data.user?.role || "organizer";
-      router.push(role === "student" ? "/student/scan" : "/organizer/sessions/open");
+      router.push(role === "student" ? "/student/scan" : "/organizer/dashboard");
       router.refresh();
     } catch {
       setError("Error de conexión. Intentá de nuevo.");

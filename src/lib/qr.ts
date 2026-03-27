@@ -3,6 +3,14 @@ import crypto from "crypto";
 import type { QrTokenPayload } from "@/types";
 
 /**
+ * Generate a short 8-character alphanumeric code for QR display.
+ * This keeps the QR simple (few pixels) so it's easy to scan.
+ */
+export function generateShortCode(): string {
+  return crypto.randomBytes(6).toString("base64url").slice(0, 8);
+}
+
+/**
  * Generate an HMAC-signed QR token for the current time slot.
  *
  * The token rotates every `rotationSec` seconds. Each token includes:

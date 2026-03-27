@@ -33,7 +33,7 @@ export default function NewClassPage() {
       }
 
       setSuccess(true);
-      setTimeout(() => router.push("/organizer/sessions/open"), 1500);
+      setTimeout(() => router.push("/organizer/dashboard"), 1500);
     } catch {
       setError("Error de conexión.");
     } finally {
@@ -51,7 +51,7 @@ export default function NewClassPage() {
               Nueva Clase
             </h1>
             <p className="text-sm text-on-surface-variant mt-1">
-              Creá una clase para organizar tus sesiones de asistencia
+              Creá una clase para registrar asistencia
             </p>
           </div>
 
@@ -110,7 +110,7 @@ export default function NewClassPage() {
                 <span className="text-sm font-semibold">Registro Digital</span>
               </div>
               <p className="text-xs text-on-surface-variant">
-                Cada sesión generará un QR rotativo. Los registros de asistencia
+                Cada clase generará un QR rotativo. Los registros de asistencia
                 se anclan en la blockchain de Stellar como evidencia inmutable.
               </p>
             </div>

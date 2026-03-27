@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import PageShell from "@/components/layout/PageShell";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import type { DbClass } from "@/types";
 
-export default function OpenSessionPage() {
+function OpenSessionContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const preselectedClassId = searchParams.get("classId");
   const [classes, setClasses] = useState<DbClass[]>([]);
   const [classId, setClassId] = useState("");
   const [rotation, setRotation] = useState(30);
@@ -21,7 +23,11 @@ export default function OpenSessionPage() {
       .then((res) => res.json())
       .then((data) => {
         setClasses(data.classes || []);
-        if (data.classes?.length > 0) setClassId(data.classes[0].id);
+        if (preselectedClassId) {
+          setClassId(preselectedClassId);
+        } else if (data.classes?.length > 0) {
+          setClassId(data.classes[0].id);
+        }
       })
       .catch(() => setError("Error cargando clases."))
       .finally(() => setLoadingClasses(false));
@@ -39,7 +45,7 @@ export default function OpenSessionPage() {
         }
       })
       .catch(() => {});
-  }, [router]);
+  }, [router, preselectedClassId]);
 
   const handleOpen = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,10 +80,10 @@ export default function OpenSessionPage() {
         <div className="space-y-8">
           <div>
             <h1 className="font-headline text-2xl font-bold text-on-surface">
-              Abrir Sesión
+              Iniciar Clase
             </h1>
             <p className="text-sm text-on-surface-variant mt-1">
-              Configurá y abrí una nueva sesión de asistencia
+              Seleccioná una clase e iniciá la asistencia
             </p>
           </div>
 
@@ -159,7 +165,7 @@ export default function OpenSessionPage() {
                 info
               </span>
               <p className="text-xs text-on-surface-variant">
-                Solo podés tener una sesión activa a la vez. El QR rotativo es
+                Solo podés tener una clase en curso a la vez. El QR rotativo es
                 la prueba de presencia: solo quienes estén presentes podrán
                 escanearlo.
               </p>
@@ -174,11 +180,27 @@ export default function OpenSessionPage() {
               <span className="material-symbols-outlined text-[20px]">
                 play_arrow
               </span>
-              Abrir Sesión
+              Iniciar Clase
             </PrimaryButton>
           </form>
         </div>
       </div>
     </PageShell>
+  );
+}
+
+export default function OpenSessionPage() {
+  return (
+    <Suspense
+      fallback={
+        <PageShell>
+          <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
+            <p className="text-sm text-on-surface-variant">Cargando...</p>
+          </div>
+        </PageShell>
+      }
+    >
+      <OpenSessionContent />
+    </Suspense>
   );
 }

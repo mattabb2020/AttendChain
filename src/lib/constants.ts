@@ -12,10 +12,10 @@ export const APP_URL =
 export const ERRORS = {
   QR_INVALID: "El código QR no es válido. Escaneá de nuevo.",
   QR_EXPIRED: "El código QR expiró. Esperá al siguiente.",
-  SESSION_NOT_FOUND: "No se encontró una sesión activa.",
+  SESSION_NOT_FOUND: "No se encontró una clase en curso.",
   SESSION_ALREADY_OPEN:
-    "Ya tenés una sesión abierta. Cerrala antes de abrir otra.",
-  SESSION_CLOSED: "Esta sesión ya fue cerrada.",
+    "Ya tenés una clase en curso. Finalizala antes de iniciar otra.",
+  SESSION_CLOSED: "Esta clase ya fue finalizada.",
   NAME_REQUIRED: "Ingresá tu nombre para registrarte.",
   CLASS_TITLE_REQUIRED: "El título de la clase debe tener al menos 3 caracteres.",
   AUTH_REQUIRED: "Iniciá sesión para continuar.",

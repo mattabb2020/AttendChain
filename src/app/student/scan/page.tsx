@@ -33,11 +33,27 @@ export default function StudentScanPage() {
     }
   }, []);
 
-  const handleCheckin = useCallback(async (token: string) => {
+  const handleCheckin = useCallback(async (rawInput: string) => {
     setStep("submitting");
     setError("");
 
     try {
+      let token = rawInput;
+
+      // If it's a short code (AC:XXXXXXXX), resolve to full token first
+      if (rawInput.startsWith("AC:")) {
+        const code = rawInput.slice(3);
+        const resolveRes = await fetch(`/api/qr/resolve?code=${encodeURIComponent(code)}`);
+        const resolveData = await resolveRes.json();
+        if (!resolveRes.ok) {
+          if (!mountedRef.current) return;
+          setError(resolveData.error || "Código QR inválido.");
+          setStep("error");
+          return;
+        }
+        token = resolveData.token;
+      }
+
       const res = await fetch("/api/checkins", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -85,16 +101,18 @@ export default function StudentScanPage() {
           if (processingRef.current || !mountedRef.current) return;
           processingRef.current = true;
 
-          let token = decodedText;
+          let input = decodedText;
+          // Legacy: if it's a full URL, extract the token param
           try {
             const url = new URL(decodedText);
-            token = url.searchParams.get("token") || decodedText;
+            const urlToken = url.searchParams.get("token");
+            if (urlToken) input = urlToken;
           } catch {
-            // Not a URL
+            // Not a URL — could be "AC:..." short code or raw token
           }
 
           stopScanner();
-          handleCheckin(token);
+          handleCheckin(input);
         },
         () => {} // Ignore scan failures
       );

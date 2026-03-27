@@ -1,13 +1,14 @@
-import { createServerSupabase } from "@/lib/supabase/server";
-import { generateQrToken } from "@/lib/qr";
-import { QR_SECRET, APP_URL, ERRORS } from "@/lib/constants";
+import { createServerSupabase, createAdminSupabase } from "@/lib/supabase/server";
+import { generateQrToken, generateShortCode } from "@/lib/qr";
+import { QR_SECRET, ERRORS } from "@/lib/constants";
 import { NextResponse } from "next/server";
 
 /**
  * GET /api/sessions/[id]/qr — Generate a fresh QR token for the session.
  *
- * Returns the HMAC-signed token (rotates every N seconds) and the URL
- * that the QR code should encode. Students scan this QR to check in.
+ * Returns a short code (e.g. "AC:k7Hm9xPq") that the QR encodes.
+ * The full HMAC-signed token is stored server-side and resolved
+ * via /api/qr/resolve when the student scans.
  */
 export async function GET(
   _request: Request,
@@ -46,8 +47,18 @@ export async function GET(
       session.qr_rotation_seconds
     );
 
-    // The URL that the QR code encodes — this is what students scan
-    const joinUrl = `${APP_URL}/join?token=${token}`;
+    // Generate short code and store mapping in DB
+    const shortCode = generateShortCode();
+    const admin = createAdminSupabase();
+
+    // Clean up old codes for this session, then insert new one
+    await admin.from("qr_codes").delete().eq("session_id", session.id);
+    await admin.from("qr_codes").insert({
+      code: shortCode,
+      session_id: session.id,
+      full_token: token,
+      expires_at: new Date(expiresAt * 1000).toISOString(),
+    });
 
     // Count current attendees
     const { count } = await supabase
@@ -57,7 +68,7 @@ export async function GET(
 
     return NextResponse.json({
       token,
-      joinUrl,
+      qrCode: `AC:${shortCode}`,
       expiresAt,
       rotationSeconds: session.qr_rotation_seconds,
       sessionId: session.id,

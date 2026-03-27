@@ -28,7 +28,13 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json({ session });
+    // Count attendees for the active session
+    const { count } = await supabase
+      .from("checkins")
+      .select("*", { count: "exact", head: true })
+      .eq("session_id", session.id);
+
+    return NextResponse.json({ session, attendeeCount: count || 0 });
   } catch {
     return NextResponse.json({ error: ERRORS.UNKNOWN }, { status: 500 });
   }

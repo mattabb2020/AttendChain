@@ -80,18 +80,9 @@ export default function StudentProfilePage() {
               className="flex items-center gap-2 px-4 py-2 text-sm text-on-surface-variant hover:text-tertiary hover:bg-tertiary/5 rounded-xl transition-colors"
             >
               <span className="material-symbols-outlined text-[18px]">logout</span>
-              Cerrar Sesión
+              Salir
             </button>
           </div>
-
-          {/* Quick action */}
-          <Link
-            href="/student/scan"
-            className="flex items-center justify-center gap-2 w-full px-6 py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-xl font-semibold shadow-lg shadow-primary/20 hover:scale-[0.98] transition-all"
-          >
-            <span className="material-symbols-outlined">qr_code_scanner</span>
-            Escanear QR
-          </Link>
 
           {/* Checkin history */}
           <div>

@@ -12,7 +12,8 @@ function QrDisplayContent() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [qrData, setQrData] = useState<{
-    joinUrl: string;
+    qrCode: string;
+    joinUrl?: string;
     expiresAt: number;
     rotationSeconds: number;
     className: string;
@@ -48,13 +49,15 @@ function QrDisplayContent() {
 
   // Render QR code to canvas when data changes
   useEffect(() => {
-    if (!qrData?.joinUrl || !canvasRef.current) return;
-    QRCode.toCanvas(canvasRef.current, qrData.joinUrl, {
-      width: 320,
-      margin: 2,
+    const code = qrData?.qrCode || qrData?.joinUrl;
+    if (!code || !canvasRef.current) return;
+    QRCode.toCanvas(canvasRef.current, code, {
+      width: 400,
+      margin: 3,
+      errorCorrectionLevel: "H",
       color: { dark: "#191c1e", light: "#ffffff" },
     });
-  }, [qrData?.joinUrl]);
+  }, [qrData?.qrCode, qrData?.joinUrl]);
 
   // Countdown timer + auto-refresh
   useEffect(() => {
@@ -76,14 +79,14 @@ function QrDisplayContent() {
 
   // Close session
   const handleClose = async () => {
-    if (!confirm("¿Cerrar la sesión? Los estudiantes ya no podrán registrarse."))
+    if (!confirm("¿Finalizar la clase? Los estudiantes ya no podrán registrarse."))
       return;
     setClosing(true);
     try {
       await fetch("/api/sessions", { method: "PATCH" });
-      router.push("/organizer/sessions/open");
+      router.push("/organizer/dashboard");
     } catch {
-      setError("Error al cerrar la sesión.");
+      setError("Error al finalizar la clase.");
       setClosing(false);
     }
   };
@@ -198,7 +201,7 @@ function QrDisplayContent() {
         className="text-tertiary border-tertiary/20 hover:bg-tertiary/5"
       >
         <span className="material-symbols-outlined text-[18px]">stop</span>
-        Cerrar Sesión
+        Finalizar Clase
       </PrimaryButton>
     </div>
   );

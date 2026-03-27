@@ -57,7 +57,7 @@ export default function RegisterPage() {
       const loginData = await loginRes.json();
       const userRole = loginData.user?.role || role;
 
-      router.push(userRole === "organizer" ? "/organizer/sessions/open" : "/student/scan");
+      router.push(userRole === "organizer" ? "/organizer/dashboard" : "/student/scan");
       router.refresh();
     } catch {
       setError("Error de conexión. Intentá de nuevo.");

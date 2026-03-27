@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function PageShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
   const [user, setUser] = useState<{
     role: string;
     name: string;
@@ -24,14 +23,6 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
       }
     });
   }, []);
-
-  const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    setUser(null);
-    router.push("/");
-    router.refresh();
-  };
 
   const isStudent = user?.role === "student";
   const isOrganizer = user?.role === "organizer";
@@ -81,24 +72,18 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
               <Link href="/verify" className={navLink(pathname.startsWith("/verify"))}>
                 Verificar
               </Link>
-              <button onClick={handleLogout} className="text-sm text-on-surface-variant hover:text-tertiary transition-colors">
-                Salir
-              </button>
             </>
           )}
 
           {/* Organizer */}
           {isOrganizer && (
             <>
-              <Link href="/organizer/sessions/open" className={navLink(pathname.startsWith("/organizer"))}>
-                Sesiones
+              <Link href="/organizer/dashboard" className={navLink(pathname.startsWith("/organizer"))}>
+                Mis Clases
               </Link>
               <Link href="/verify" className={navLink(pathname.startsWith("/verify"))}>
                 Verificar
               </Link>
-              <button onClick={handleLogout} className="text-sm text-on-surface-variant hover:text-tertiary transition-colors">
-                Salir
-              </button>
             </>
           )}
         </nav>
@@ -132,7 +117,7 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
         )}
         {isOrganizer && (
           <>
-            <MobileNavItem href="/organizer/sessions/open" icon="qr_code_scanner" label="Sesiones" active={pathname.startsWith("/organizer")} />
+            <MobileNavItem href="/organizer/dashboard" icon="school" label="Clases" active={pathname.startsWith("/organizer")} />
             <MobileNavItem href="/verify" icon="verified" label="Verificar" active={pathname.startsWith("/verify")} />
           </>
         )}
