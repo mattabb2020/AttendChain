@@ -104,7 +104,7 @@ export default function RegisterPage() {
                       : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high"
                   }`}
                 >
-                  {r === "student" ? "Estudiante" : "Organizador"}
+                  {r === "student" ? "Estudiante" : "Profesor"}
                 </button>
               ))}
             </div>
@@ -181,6 +181,10 @@ export default function RegisterPage() {
               </Link>
             </p>
           </form>
+
+          <p className="text-center text-xs text-gray-400 mt-6">
+            Este es un MVP — más funcionalidades próximamente 🚀
+          </p>
         </div>
       </div>
     </PageShell>
