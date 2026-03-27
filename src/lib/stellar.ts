@@ -1,22 +1,22 @@
 /**
- * Stellar integration — SERVER-ONLY
+ * Stellar / Soroban integration — SERVER-ONLY
  *
- * Records attendance hashes on Stellar Testnet as transactions.
- * Each check-in creates a transaction with the recordHash embedded,
- * making it publicly verifiable on Stellar Explorer.
+ * Invokes the AttendChain Soroban smart contract on Stellar Testnet.
+ * Each check-in calls `record_attendance` on the contract, storing the
+ * attendance hash in persistent contract storage. Verification calls
+ * `has` and `get` (read-only, resolved via simulation).
  *
  * The institution's secret key signs all transactions — it must
  * NEVER be imported from client-side code.
  */
 import {
   Keypair,
-  TransactionBuilder,
   Networks,
-  BASE_FEE,
-  Operation,
-  Memo,
-  rpc as SorobanRpc,
+  contract,
 } from "@stellar/stellar-sdk";
+import crypto from "crypto";
+
+// ─── Config helpers ──────────────────────────────────────
 
 function getRpcUrl(): string {
   return process.env.STELLAR_RPC_URL || "https://soroban-testnet.stellar.org";
@@ -34,103 +34,118 @@ function getKeypair() {
   return Keypair.fromSecret(secret);
 }
 
+function getContractId(): string {
+  const id = process.env.CONTRACT_ID;
+  if (!id || id === "not-needed") {
+    throw new Error(
+      "CONTRACT_ID is not configured. Run: node scripts/deploy-contract.mjs"
+    );
+  }
+  return id;
+}
+
+// ─── Soroban contract client (lazy singleton) ────────────
+
+let clientPromise: Promise<contract.Client> | null = null;
+
+function getContractClient(): Promise<contract.Client> {
+  if (!clientPromise) {
+    const keypair = getKeypair();
+    const networkPassphrase = getNetworkPassphrase();
+
+    clientPromise = contract.Client.from({
+      contractId: getContractId(),
+      rpcUrl: getRpcUrl(),
+      networkPassphrase,
+      publicKey: keypair.publicKey(),
+      ...contract.basicNodeSigner(keypair, networkPassphrase),
+    });
+  }
+  return clientPromise;
+}
+
+// ─── Public API ──────────────────────────────────────────
+
 /**
- * Record an attendance hash on Stellar Testnet.
+ * Record an attendance hash on the Soroban contract.
  *
- * Creates a self-payment transaction with the recordHash as a
- * managed data entry (key-value on the account). The transaction
- * hash serves as the immutable proof.
- *
- * The recordHash (first 28 chars) goes in the tx memo for quick lookup.
- * The full hash is stored as account data via manage_data operation.
+ * Invokes `record_attendance(admin, record_hash, session_hash, timestamp)`
+ * on-chain. The contract is idempotent — duplicate hashes are a no-op.
  */
 export async function recordOnChain(
   recordHash: string,
   sessionId: string,
   timestamp: number
 ): Promise<{ txHash: string }> {
-  const server = new SorobanRpc.Server(getRpcUrl());
+  const client = await getContractClient();
   const keypair = getKeypair();
-  const networkPassphrase = getNetworkPassphrase();
 
-  const account = await server.getAccount(keypair.publicKey());
+  // Convert 64-char hex recordHash → 32-byte Buffer for BytesN<32>
+  const recordHashBytes = Buffer.from(recordHash, "hex");
 
-  // Build transaction:
-  // - Memo: first 28 chars of recordHash (memo text max = 28 bytes)
-  // - manage_data: store the full recordHash as account data
-  const memoText = recordHash.substring(0, 28);
-  const dataKey = `ac:${recordHash.substring(0, 20)}`; // max 64 chars for key
-  const dataValue = Buffer.from(
-    JSON.stringify({ h: recordHash, s: sessionId, t: timestamp })
-  );
+  // SHA-256 the sessionId to get a 32-byte session_hash
+  const sessionHashBytes = crypto
+    .createHash("sha256")
+    .update(sessionId)
+    .digest();
 
-  const tx = new TransactionBuilder(account, {
-    fee: BASE_FEE,
-    networkPassphrase,
-  })
-    .addOperation(
-      Operation.manageData({
-        name: dataKey,
-        value: dataValue.length <= 64 ? dataValue : dataValue.subarray(0, 64),
-      })
-    )
-    .addMemo(Memo.text(memoText))
-    .setTimeout(30)
-    .build();
+  // Invoke the contract — client dynamically generates methods from on-chain spec
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tx = await (client as any).record_attendance({
+    admin: keypair.publicKey(),
+    record_hash: recordHashBytes,
+    session_hash: sessionHashBytes,
+    ts: BigInt(timestamp),
+  });
 
-  tx.sign(keypair);
+  const sentTx = await tx.signAndSend();
 
-  const result = await server.sendTransaction(tx);
-
-  if (result.status === "ERROR") {
-    throw new Error(`Transaction failed: ${result.status}`);
-  }
-
-  // Poll for confirmation (max 30 seconds to prevent infinite loops)
-  const txHash = result.hash;
-  let getResult = await server.getTransaction(txHash);
-  let attempts = 0;
-  const MAX_POLL_ATTEMPTS = 30;
-  while (getResult.status === "NOT_FOUND" && attempts < MAX_POLL_ATTEMPTS) {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    getResult = await server.getTransaction(txHash);
-    attempts++;
-  }
-
-  if (getResult.status === "NOT_FOUND") {
-    throw new Error(`Transaction confirmation timed out after ${MAX_POLL_ATTEMPTS}s: ${txHash}`);
-  }
-
-  if (getResult.status === "FAILED") {
-    throw new Error(`Transaction failed on-chain: ${txHash}`);
-  }
+  // Extract transaction hash from the send response
+  const txHash = sentTx.sendTransactionResponse?.hash
+    ?? sentTx.getTransactionResponse?.hash
+    ?? "";
 
   return { txHash };
 }
 
 /**
- * Verify if a record exists on-chain by checking the institution account's data.
- * Falls back to database check if account data is not available.
+ * Verify if a record exists on the Soroban contract.
+ *
+ * Calls `has(record_hash)` and optionally `get(record_hash)`.
+ * Both are read-only — resolved via simulation, no on-chain tx needed.
  */
 export async function verifyOnChain(
   recordHash: string
-): Promise<{ exists: boolean }> {
+): Promise<{ exists: boolean; sessionHash?: string; timestamp?: number }> {
   try {
-    const server = new SorobanRpc.Server(getRpcUrl());
-    const keypair = getKeypair();
+    const client = await getContractClient();
+    const recordHashBytes = Buffer.from(recordHash, "hex");
 
-    const account = await server.getAccount(keypair.publicKey());
-    const dataKey = `ac:${recordHash.substring(0, 20)}`;
-
-    // Check if the data entry exists on the account
+    // has() is read-only — result comes from simulation
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const accountAny = account as any;
-    const data = accountAny.data_attr || accountAny._data;
-    if (data && data[dataKey]) {
-      return { exists: true };
+    const hasTx = await (client as any).has({
+      record_hash: recordHashBytes,
+    });
+    const exists: boolean = hasTx.result;
+
+    if (!exists) return { exists: false };
+
+    // get() returns Option<(BytesN<32>, u64)>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const getTx = await (client as any).get({
+      record_hash: recordHashBytes,
+    });
+
+    if (getTx.result) {
+      const [sessionBytes, ts] = getTx.result;
+      return {
+        exists: true,
+        sessionHash: Buffer.from(sessionBytes).toString("hex"),
+        timestamp: Number(ts),
+      };
     }
 
-    return { exists: false };
+    return { exists: true };
   } catch {
     return { exists: false };
   }
@@ -141,4 +156,11 @@ export async function verifyOnChain(
  */
 export function getStellarLabUrl(txHash: string): string {
   return `https://stellar.expert/explorer/testnet/tx/${txHash}`;
+}
+
+/**
+ * Build the Stellar Expert URL for the deployed contract.
+ */
+export function getContractExplorerUrl(): string {
+  return `https://stellar.expert/explorer/testnet/contract/${getContractId()}`;
 }

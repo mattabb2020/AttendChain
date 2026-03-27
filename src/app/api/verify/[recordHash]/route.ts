@@ -36,9 +36,11 @@ export async function GET(
 
     // Check on-chain (even if not in DB, the contract is the source of truth)
     let onchainExists = false;
+    let onchainTimestamp: number | undefined;
     try {
       const result = await verifyOnChain(recordHash);
       onchainExists = result.exists;
+      onchainTimestamp = result.timestamp;
     } catch {
       // Contract might not be deployed yet — that's OK
     }
@@ -51,7 +53,7 @@ export async function GET(
       stellarLabUrl: checkin?.tx_hash
         ? getStellarLabUrl(checkin.tx_hash)
         : null,
-      timestamp: checkin?.created_at || null,
+      timestamp: checkin?.created_at || (onchainTimestamp ? new Date(onchainTimestamp).toISOString() : null),
     };
 
     return NextResponse.json(response);
