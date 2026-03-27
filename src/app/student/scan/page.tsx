@@ -224,32 +224,6 @@ export default function StudentScanPage() {
                 </div>
               )}
 
-              {/* Manual fallback */}
-              <details className="text-sm">
-                <summary className="text-on-surface-variant cursor-pointer hover:text-primary">
-                  ¿No funciona la cámara? Ingresá el código manualmente
-                </summary>
-                <form
-                  className="mt-3 flex gap-2"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const input = (e.target as HTMLFormElement).token as HTMLInputElement;
-                    if (input.value.trim()) {
-                      processingRef.current = true;
-                      stopScanner();
-                      handleCheckin(input.value.trim());
-                    }
-                  }}
-                >
-                  <input
-                    name="token"
-                    type="text"
-                    placeholder="Pegá el token del QR"
-                    className="flex-1 px-3 py-2 bg-surface-container-lowest rounded-xl text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                  <PrimaryButton type="submit">Enviar</PrimaryButton>
-                </form>
-              </details>
             </div>
           )}
 
