@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import PageShell from "@/components/layout/PageShell";
 import { createClient } from "@/lib/supabase/client";
 
@@ -71,27 +70,6 @@ export default function Home() {
             transparente y definitivo.
           </p>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Link
-              href="/auth/register"
-              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-xl font-semibold shadow-lg shadow-primary/20 hover:scale-[0.98] transition-all text-center"
-            >
-              Crear Cuenta
-            </Link>
-            <Link
-              href="/auth/login"
-              className="w-full sm:w-auto px-8 py-4 bg-secondary text-on-primary rounded-xl font-semibold hover:scale-[0.98] transition-all shadow-lg shadow-secondary/20 text-center"
-            >
-              Ingresar
-            </Link>
-            <Link
-              href="/verify"
-              className="w-full sm:w-auto px-8 py-4 text-primary font-semibold hover:bg-primary/5 rounded-xl transition-all border border-primary/20 text-center"
-            >
-              Verificar Registro
-            </Link>
-          </div>
         </div>
       </section>
 
@@ -131,6 +109,65 @@ export default function Home() {
                 {f.desc}
               </p>
             </div>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="max-w-3xl mx-auto px-4 py-16">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-headline font-bold text-gray-900 tracking-tight">
+            Preguntas Frecuentes
+          </h2>
+          <p className="mt-3 text-gray-500 text-base font-body">
+            Todo lo que necesitás saber sobre AttendChain
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {[
+            {
+              q: "¿Cómo funciona el registro de asistencia?",
+              a: "El organizador proyecta un código QR que se renueva cada 30 segundos. Vos lo escaneás con tu celular y tu asistencia queda registrada al instante en la blockchain de Stellar. No hace falta instalar nada.",
+            },
+            {
+              q: "¿Por qué el QR cambia cada 30 segundos?",
+              a: "La rotación evita que alguien comparta una captura de pantalla para marcar asistencia sin estar presente. Solo funciona el QR que se muestra en vivo en ese momento.",
+            },
+            {
+              q: '¿Qué significa que la asistencia esté "en la blockchain"?',
+              a: "Cada registro genera un hash único que se graba en la red Stellar. Es inmutable: nadie puede borrarlo ni modificarlo después. Cualquier persona puede verificar que el registro es auténtico.",
+            },
+            {
+              q: "¿Cómo verifico que un registro es real?",
+              a: "Cada check-in tiene un hash de transacción. Pegalo en nuestra página de verificación o directamente en el explorador de Stellar y vas a ver la fecha, hora y datos exactos del registro.",
+            },
+            {
+              q: "¿Tiene algún costo usar AttendChain?",
+              a: "No, es completamente gratis. Usamos la testnet de Stellar, así que no hay costos de transacción. Solo necesitás un navegador web y conexión a internet.",
+            },
+            {
+              q: "¿Necesito una wallet de crypto para usarlo?",
+              a: "No. AttendChain maneja todo por atrás. Vos solo escaneás el QR y listo. La blockchain trabaja de forma invisible para que la experiencia sea simple.",
+            },
+          ].map((faq) => (
+            <details
+              key={faq.q}
+              className="group rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md open:shadow-md open:border-primary/30 open:bg-primary/[0.02]"
+            >
+              <summary className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4 text-left text-gray-900 font-semibold text-sm select-none [&::-webkit-details-marker]:hidden list-none">
+                <span>{faq.q}</span>
+                <span className="flex-shrink-0 text-gray-400 transition-transform duration-300 group-open:rotate-45">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                </span>
+              </summary>
+              <div className="px-5 pb-4 text-sm text-gray-500 leading-relaxed">
+                {faq.a}
+              </div>
+            </details>
           ))}
         </div>
       </section>
