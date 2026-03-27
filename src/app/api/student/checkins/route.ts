@@ -1,11 +1,12 @@
-import { createServerSupabase, createAdminSupabase } from "@/lib/supabase/server";
+import { createAdminSupabase } from "@/lib/supabase/server";
+import { createRouteClient } from "@/lib/supabase/route-client";
 import { ERRORS } from "@/lib/constants";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 /** GET /api/student/checkins — List the authenticated student's check-ins */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = createServerSupabase();
+    const supabase = createRouteClient(request);
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -16,7 +17,6 @@ export async function GET() {
 
     const admin = createAdminSupabase();
 
-    // Get all checkins for this student (via attendees.user_id)
     const { data: checkins, error } = await admin
       .from("checkins")
       .select(`

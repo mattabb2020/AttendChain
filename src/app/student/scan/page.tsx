@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Html5Qrcode } from "html5-qrcode";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import PageShell from "@/components/layout/PageShell";
 import PrimaryButton from "@/components/ui/PrimaryButton";
@@ -16,58 +15,25 @@ export default function StudentScanPage() {
   const [result, setResult] = useState<CheckinResponse | null>(null);
   const [error, setError] = useState("");
   const [cameraError, setCameraError] = useState("");
-  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const [scannerReady, setScannerReady] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const scannerRef = useRef<any>(null);
+  const mountedRef = useRef(true);
   const processingRef = useRef(false);
 
-  // Start QR scanner
-  useEffect(() => {
-    const scannerId = "qr-reader";
-
-    const startScanner = async () => {
-      try {
-        const scanner = new Html5Qrcode(scannerId);
-        scannerRef.current = scanner;
-
-        await scanner.start(
-          { facingMode: "environment" },
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-          },
-          (decodedText) => {
-            if (processingRef.current) return;
-            processingRef.current = true;
-
-            // Extract token from URL
-            let token = decodedText;
-            try {
-              const url = new URL(decodedText);
-              token = url.searchParams.get("token") || decodedText;
-            } catch {
-              // Not a URL, use as-is
-            }
-
-            handleCheckin(token);
-            scanner.stop().catch(() => {});
-          },
-          () => {} // ignore scan failures
-        );
-      } catch (err) {
-        console.error("Camera error:", err);
-        setCameraError(
-          "No se pudo acceder a la cámara. Verificá los permisos del navegador."
-        );
+  const stopScanner = useCallback(async () => {
+    try {
+      if (scannerRef.current) {
+        const scanner = scannerRef.current;
+        scannerRef.current = null;
+        await scanner.stop();
       }
-    };
-
-    startScanner();
-
-    return () => {
-      scannerRef.current?.stop().catch(() => {});
-    };
+    } catch {
+      // Ignore stop errors
+    }
   }, []);
 
-  const handleCheckin = async (token: string) => {
+  const handleCheckin = useCallback(async (token: string) => {
     setStep("submitting");
     setError("");
 
@@ -75,10 +41,13 @@ export default function StudentScanPage() {
       const res = await fetch("/api/checkins", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ qrToken: token }),
       });
 
       const data = await res.json();
+
+      if (!mountedRef.current) return;
 
       if (!res.ok) {
         setError(data.error || "Error al registrar asistencia.");
@@ -89,44 +58,95 @@ export default function StudentScanPage() {
       setResult(data);
       setStep("result");
     } catch {
+      if (!mountedRef.current) return;
       setError("Error de conexión. Intentá de nuevo.");
       setStep("error");
     }
-  };
+  }, []);
 
-  const handleRetry = () => {
-    processingRef.current = false;
-    setStep("scanning");
-    setError("");
-    setCameraError("");
+  const startScanner = useCallback(async () => {
+    // Wait for DOM element to exist
+    const element = document.getElementById("qr-reader");
+    if (!element || !mountedRef.current) return;
 
-    // Restart scanner
-    const scannerId = "qr-reader";
-    const scanner = new Html5Qrcode(scannerId);
-    scannerRef.current = scanner;
+    try {
+      // Dynamic import to avoid SSR issues
+      const { Html5Qrcode } = await import("html5-qrcode");
 
-    scanner
-      .start(
+      if (!mountedRef.current) return;
+
+      const scanner = new Html5Qrcode("qr-reader");
+      scannerRef.current = scanner;
+
+      await scanner.start(
         { facingMode: "environment" },
         { fps: 10, qrbox: { width: 250, height: 250 } },
-        (decodedText) => {
-          if (processingRef.current) return;
+        (decodedText: string) => {
+          if (processingRef.current || !mountedRef.current) return;
           processingRef.current = true;
 
           let token = decodedText;
           try {
             const url = new URL(decodedText);
             token = url.searchParams.get("token") || decodedText;
-          } catch {}
+          } catch {
+            // Not a URL
+          }
 
+          stopScanner();
           handleCheckin(token);
-          scanner.stop().catch(() => {});
         },
-        () => {}
-      )
-      .catch(() => {
-        setCameraError("No se pudo reiniciar la cámara.");
-      });
+        () => {} // Ignore scan failures
+      );
+
+      if (mountedRef.current) {
+        setScannerReady(true);
+      }
+    } catch (err) {
+      if (!mountedRef.current) return;
+      console.error("Camera error:", err);
+      setCameraError(
+        "No se pudo acceder a la cámara. Verificá los permisos del navegador."
+      );
+    }
+  }, [stopScanner, handleCheckin]);
+
+  // Start scanner on mount
+  useEffect(() => {
+    mountedRef.current = true;
+    processingRef.current = false;
+
+    if (step === "scanning") {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(startScanner, 300);
+      return () => {
+        clearTimeout(timer);
+        mountedRef.current = false;
+        stopScanner();
+      };
+    }
+
+    return () => {
+      mountedRef.current = false;
+      stopScanner();
+    };
+  }, [step, startScanner, stopScanner]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+      stopScanner();
+    };
+  }, [stopScanner]);
+
+  const handleRetry = async () => {
+    await stopScanner();
+    processingRef.current = false;
+    setScannerReady(false);
+    setCameraError("");
+    setError("");
+    setStep("scanning");
   };
 
   // Poll for on-chain status
@@ -140,10 +160,7 @@ export default function StudentScanPage() {
         if (data.onchainStatus === "SUCCESS" || data.onchainStatus === "FAILED") {
           setResult((prev) =>
             prev
-              ? {
-                  ...prev,
-                  onchain: { status: data.onchainStatus, txHash: data.txHash },
-                }
+              ? { ...prev, onchain: { status: data.onchainStatus, txHash: data.txHash } }
               : prev
           );
         }
@@ -179,12 +196,17 @@ export default function StudentScanPage() {
                   </PrimaryButton>
                 </div>
               ) : (
-                <div className="rounded-2xl overflow-hidden bg-surface-dim">
+                <div className="rounded-2xl overflow-hidden bg-surface-dim min-h-[300px]">
                   <div id="qr-reader" className="w-full" />
+                  {!scannerReady && (
+                    <div className="flex items-center justify-center h-[300px]">
+                      <p className="text-sm text-on-surface-variant">Iniciando cámara...</p>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Manual token input fallback */}
+              {/* Manual fallback */}
               <details className="text-sm">
                 <summary className="text-on-surface-variant cursor-pointer hover:text-primary">
                   ¿No funciona la cámara? Ingresá el código manualmente
@@ -196,7 +218,7 @@ export default function StudentScanPage() {
                     const input = (e.target as HTMLFormElement).token as HTMLInputElement;
                     if (input.value.trim()) {
                       processingRef.current = true;
-                      scannerRef.current?.stop().catch(() => {});
+                      stopScanner();
                       handleCheckin(input.value.trim());
                     }
                   }}
@@ -235,14 +257,10 @@ export default function StudentScanPage() {
           {step === "error" && (
             <div className="space-y-6 text-center">
               <div className="w-16 h-16 mx-auto rounded-2xl bg-error-container flex items-center justify-center">
-                <span className="material-symbols-outlined text-on-error-container text-3xl">
-                  error
-                </span>
+                <span className="material-symbols-outlined text-on-error-container text-3xl">error</span>
               </div>
               <div>
-                <h2 className="font-headline text-xl font-bold text-on-surface">
-                  Error
-                </h2>
+                <h2 className="font-headline text-xl font-bold text-on-surface">Error</h2>
                 <p className="text-sm text-on-surface-variant mt-1">{error}</p>
               </div>
               <PrimaryButton onClick={handleRetry} className="w-full">
@@ -256,9 +274,7 @@ export default function StudentScanPage() {
             <div className="space-y-6">
               <div className="text-center space-y-2">
                 <div className="w-16 h-16 mx-auto rounded-2xl bg-secondary-container flex items-center justify-center">
-                  <span className="material-symbols-outlined text-on-secondary-container text-3xl">
-                    verified
-                  </span>
+                  <span className="material-symbols-outlined text-on-secondary-container text-3xl">verified</span>
                 </div>
                 <h1 className="font-headline text-2xl font-bold text-on-surface">
                   ¡Asistencia Registrada!
@@ -267,12 +283,9 @@ export default function StudentScanPage() {
 
               <div className="bg-surface-container-lowest rounded-2xl p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-on-surface">
-                    Estado on-chain
-                  </span>
+                  <span className="text-sm font-semibold text-on-surface">Estado on-chain</span>
                   <StatusBadge status={result.onchain.status} />
                 </div>
-
                 <div className="space-y-3">
                   <div>
                     <p className="text-xs text-on-surface-variant mb-1">Record Hash</p>

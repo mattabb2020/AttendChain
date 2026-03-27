@@ -1,4 +1,5 @@
-import { createServerSupabase, createAdminSupabase } from "@/lib/supabase/server";
+import { createAdminSupabase } from "@/lib/supabase/server";
+import { createRouteClient } from "@/lib/supabase/route-client";
 import { validateQrToken } from "@/lib/qr";
 import { generateRecordHash } from "@/lib/hash";
 import { recordOnChain } from "@/lib/stellar";
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
     const { qrToken } = await request.json();
 
     // 1. Verify student is authenticated
-    const supabase = createServerSupabase();
+    const supabase = createRouteClient(request);
     const {
       data: { user },
     } = await supabase.auth.getUser();
