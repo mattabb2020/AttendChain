@@ -127,28 +127,36 @@ export default function Home() {
         <div className="space-y-3">
           {[
             {
-              q: "¿Cómo funciona el registro de asistencia?",
-              a: "El organizador proyecta un código QR que se renueva cada 30 segundos. Vos lo escaneás con tu celular y tu asistencia queda registrada al instante en la blockchain de Stellar. No hace falta instalar nada.",
+              q: "¿Qué es AttendChain y para qué sirve?",
+              a: "AttendChain es una plataforma web que registra tu asistencia a clases, eventos o capacitaciones de forma verificable. Cada vez que escaneás un QR, tu presencia queda grabada en la red Stellar — un registro público que nadie puede falsificar ni borrar.",
             },
             {
-              q: "¿Por qué el QR cambia cada 30 segundos?",
-              a: "La rotación evita que alguien comparta una captura de pantalla para marcar asistencia sin estar presente. Solo funciona el QR que se muestra en vivo en ese momento.",
+              q: "¿Cómo funciona el registro de asistencia?",
+              a: "El profesor proyecta un código en pantalla que se renueva automáticamente. Vos lo escaneás con tu celular y tu presencia queda guardada al instante en la red de Stellar. No hace falta instalar nada.",
+            },
+            {
+              q: "¿Necesito instalar alguna app?",
+              a: "No. AttendChain funciona directamente desde el navegador de tu celular. Sin descargas, sin configuración. Solo abrís la cámara, apuntás al código y listo.",
+            },
+            {
+              q: "¿Por qué el código se renueva cada tantos segundos?",
+              a: "Para evitar que alguien comparta una captura de pantalla y marque presencia sin estar ahí. Solo funciona el código que se muestra en vivo en ese momento.",
+            },
+            {
+              q: "¿Qué pasa si el código cambia justo cuando lo estoy leyendo?",
+              a: "No hay problema. El sistema tiene un margen de tolerancia para que la lectura se complete aunque el código esté por rotar. Si no llegás a tiempo, el nuevo aparece de inmediato y podés intentarlo otra vez.",
             },
             {
               q: '¿Qué significa que la asistencia esté "en la blockchain"?',
-              a: "Cada registro genera un hash único que se graba en la red Stellar. Es inmutable: nadie puede borrarlo ni modificarlo después. Cualquier persona puede verificar que el registro es auténtico.",
+              a: "Cada vez que confirmás tu presencia, se genera un código único que queda grabado en la red Stellar. Es permanente: ni el organizador ni nadie más puede modificarlo o eliminarlo después.",
             },
             {
               q: "¿Cómo verifico que un registro es real?",
-              a: "Cada check-in tiene un hash de transacción. Pegalo en nuestra página de verificación o directamente en el explorador de Stellar y vas a ver la fecha, hora y datos exactos del registro.",
+              a: "Cada check-in tiene un código de transacción. Pegalo en nuestra página de verificación o en el explorador de Stellar y vas a ver la fecha, hora y datos exactos de ese momento.",
             },
             {
-              q: "¿Tiene algún costo usar AttendChain?",
-              a: "No, es completamente gratis. Usamos la testnet de Stellar, así que no hay costos de transacción. Solo necesitás un navegador web y conexión a internet.",
-            },
-            {
-              q: "¿Necesito una wallet de crypto para usarlo?",
-              a: "No. AttendChain maneja todo por atrás. Vos solo escaneás el QR y listo. La blockchain trabaja de forma invisible para que la experiencia sea simple.",
+              q: "¿Qué ventaja me da AttendChain frente a un registro normal?",
+              a: "Con un registro tradicional — una firma, una planilla o un QR estático — no tenés forma de demostrar que realmente estuviste presente si alguien lo cuestiona. AttendChain te da un comprobante propio: un código de transacción grabado en la red Stellar con fecha, hora y tus datos. Es tuyo, es permanente y cualquier persona puede verificarlo sin depender de que el organizador lo confirme.",
             },
           ].map((faq) => (
             <details
