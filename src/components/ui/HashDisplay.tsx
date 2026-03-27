@@ -12,8 +12,8 @@ export default function HashDisplay({ hash }: { hash: string }) {
   };
 
   return (
-    <div className="flex items-center gap-1.5 bg-gray-50 rounded-lg px-2.5 py-1.5 min-w-0">
-      <code className="font-label text-xs text-gray-500 truncate min-w-0">
+    <div className="flex items-center gap-1.5 bg-gray-50 rounded-lg px-2.5 py-1.5 min-w-0 overflow-hidden">
+      <code className="font-label text-xs text-gray-500 truncate min-w-0 flex-1">
         {hash}
       </code>
       <button

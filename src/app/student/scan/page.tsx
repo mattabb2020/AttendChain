@@ -206,7 +206,7 @@ export default function StudentScanPage() {
 
               {cameraError ? (
                 <div className="space-y-4">
-                  <div className="bg-error-container text-on-error-container px-4 py-3 rounded-xl text-sm">
+                  <div className="bg-error-container text-on-error-container px-4 py-3 rounded-xl text-sm break-words">
                     {cameraError}
                   </div>
                   <PrimaryButton onClick={handleRetry} className="w-full">

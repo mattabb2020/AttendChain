@@ -121,9 +121,9 @@ function QrDisplayContent() {
       ) : (
         <>
           {/* QR Card */}
-          <div className="bg-surface-container-lowest rounded-3xl p-8 shadow-[0_20px_40px_rgba(25,28,30,0.06)] mb-8">
+          <div className="bg-surface-container-lowest rounded-3xl px-4 py-6 sm:p-8 shadow-[0_20px_40px_rgba(25,28,30,0.06)] mb-8">
             <div className="bg-surface-dim rounded-2xl p-4 flex items-center justify-center">
-              <canvas ref={canvasRef} className="rounded-xl" />
+              <canvas ref={canvasRef} className="rounded-xl max-w-full h-auto" />
             </div>
 
             {/* Countdown */}
