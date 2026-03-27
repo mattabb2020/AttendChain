@@ -54,6 +54,7 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
             <>
               <Link href="/" className={navLink(pathname === "/")}>Home</Link>
               <Link href="/verify" className={navLink(pathname.startsWith("/verify"))}>Verificar</Link>
+              <Link href="/analytics" className={navLink(pathname.startsWith("/analytics"))}>MVP Dashboard</Link>
               <Link href="/auth/login" className="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors">
                 Iniciar Sesión
               </Link>

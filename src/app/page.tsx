@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import PageShell from "@/components/layout/PageShell";
 import { createClient } from "@/lib/supabase/client";
 
@@ -69,6 +70,14 @@ export default function Home() {
             de tiempo inmutable en la blockchain de Stellar. Auditable,
             transparente y definitivo.
           </p>
+
+          <Link
+            href="/analytics"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary/20 text-primary text-sm font-semibold hover:bg-primary/5 transition-colors"
+          >
+            <span className="material-symbols-outlined text-base">analytics</span>
+            MVP Dashboard
+          </Link>
 
         </div>
       </section>
@@ -157,6 +166,10 @@ export default function Home() {
             {
               q: "¿Qué ventaja me da AttendChain frente a un registro normal?",
               a: "Con un registro tradicional — una firma, una planilla o un QR estático — no tenés forma de demostrar que realmente estuviste presente si alguien lo cuestiona. AttendChain te da un comprobante propio: un código de transacción grabado en la red Stellar con fecha, hora y tus datos. Es tuyo, es permanente y cualquier persona puede verificarlo sin depender de que el organizador lo confirme.",
+            },
+            {
+              q: "¿Qué es el MVP Dashboard?",
+              a: "Es un prototipo de panel analítico que muestra cómo AttendChain podría ofrecer a universidades y escuelas un dashboard de riesgo de deserción, KPIs académicos y alertas tempranas. Los datos que ves son ficticios — generados para demostrar el concepto. Nuestro objetivo es integrar estas métricas con datos reales de asistencia, notas y actividad para ayudar a las instituciones a detectar y acompañar a estudiantes en riesgo.",
             },
           ].map((faq) => (
             <details
