@@ -59,6 +59,9 @@ function getContractClient(): Promise<contract.Client> {
       networkPassphrase,
       publicKey: keypair.publicKey(),
       ...contract.basicNodeSigner(keypair, networkPassphrase),
+    }).catch((err) => {
+      clientPromise = null; // Reset so next call retries
+      throw err;
     });
   }
   return clientPromise;
@@ -102,7 +105,7 @@ export async function recordOnChain(
 
   // Extract transaction hash from the send response
   const txHash = sentTx.sendTransactionResponse?.hash
-    ?? sentTx.getTransactionResponse?.hash
+    ?? sentTx.getTransactionResponse?.txHash
     ?? "";
 
   return { txHash };
@@ -146,7 +149,8 @@ export async function verifyOnChain(
     }
 
     return { exists: true };
-  } catch {
+  } catch (err) {
+    console.error("[verifyOnChain] Contract verification failed:", err);
     return { exists: false };
   }
 }
