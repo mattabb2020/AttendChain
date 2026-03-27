@@ -3,11 +3,11 @@ import crypto from "crypto";
 import type { QrTokenPayload } from "@/types";
 
 /**
- * Generate a short 8-character alphanumeric code for QR display.
- * This keeps the QR simple (few pixels) so it's easy to scan.
+ * Generate a short 12-character alphanumeric code for QR display.
+ * 12 chars of base64url ≈ 72 bits of entropy — resistant to brute-force.
  */
 export function generateShortCode(): string {
-  return crypto.randomBytes(6).toString("base64url").slice(0, 8);
+  return crypto.randomBytes(9).toString("base64url").slice(0, 12);
 }
 
 /**
