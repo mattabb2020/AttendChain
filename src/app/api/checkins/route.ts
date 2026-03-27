@@ -36,6 +36,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (user.user_metadata?.role !== "student") {
+      return NextResponse.json(
+        { error: "Solo estudiantes pueden registrar asistencia." },
+        { status: 403 }
+      );
+    }
+
     const studentName = user.user_metadata?.name || user.email || "Estudiante";
 
     if (!qrToken) {
@@ -142,7 +149,7 @@ export async function POST(request: Request) {
         .update({ onchain_status: "SUCCESS", tx_hash: txHash })
         .eq("id", checkin.id);
     } catch (err) {
-      console.error("On-chain recording failed:", err);
+      console.error("On-chain recording failed:", err instanceof Error ? err.message : "Unknown error");
       onchainStatus = "FAILED";
 
       await admin
@@ -160,7 +167,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(response, { status: 201 });
   } catch (err) {
-    console.error("Checkin error:", err);
+    console.error("Checkin error:", err instanceof Error ? err.message : "Unknown error");
     return NextResponse.json(
       { error: ERRORS.CHECKIN_FAILED },
       { status: 500 }

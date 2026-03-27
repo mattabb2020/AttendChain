@@ -14,6 +14,10 @@ export async function GET() {
       return NextResponse.json({ error: ERRORS.AUTH_REQUIRED }, { status: 401 });
     }
 
+    if (user.user_metadata?.role !== "organizer") {
+      return NextResponse.json({ error: "Acceso denegado." }, { status: 403 });
+    }
+
     const { data: classes, error } = await supabase
       .from("classes")
       .select("*")
@@ -38,6 +42,10 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: ERRORS.AUTH_REQUIRED }, { status: 401 });
+    }
+
+    if (user.user_metadata?.role !== "organizer") {
+      return NextResponse.json({ error: "Acceso denegado." }, { status: 403 });
     }
 
     const { title, description } = await request.json();

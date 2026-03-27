@@ -38,6 +38,21 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Role-based path protection: prevent students from accessing organizer pages and vice versa
+  if (user) {
+    const role = user.user_metadata?.role;
+    if (path.startsWith("/organizer") && role !== "organizer") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/student/scan";
+      return NextResponse.redirect(url);
+    }
+    if (path.startsWith("/student") && role !== "student") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/organizer/dashboard";
+      return NextResponse.redirect(url);
+    }
+  }
+
   // Redirect /join to /student/scan (no more anonymous check-in)
   if (path === "/join") {
     const url = request.nextUrl.clone();

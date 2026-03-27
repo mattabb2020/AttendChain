@@ -31,7 +31,7 @@ async function main() {
   }
 
   console.log(`   Public:  ${keypair.publicKey()}`);
-  console.log(`   Secret:  ${keypair.secret()}\n`);
+  console.log(`   Secret:  ***REDACTED*** (check .env.local)\n`);
 
   // Step 2: Fund via Friendbot
   console.log("💰 Funding account via Friendbot...");
@@ -119,7 +119,9 @@ async function main() {
   // Output the values
   console.log("═══════════════════════════════════════════════════");
   console.log("✅ DONE! Add these to your .env.local and Vercel:\n");
-  console.log(`INSTITUTION_SECRET=${keypair.secret()}`);
+  // Write secret to .env.local directly instead of printing to console
+  console.log(`INSTITUTION_SECRET=***REDACTED***`);
+  console.log(`(Secret was written to .env.local — do NOT log secrets in CI/CD)`);
   console.log(`\n(CONTRACT_ID is not needed — we use direct Stellar transactions)`);
   console.log("═══════════════════════════════════════════════════\n");
 

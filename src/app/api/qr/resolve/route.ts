@@ -1,4 +1,4 @@
-import { createAdminSupabase } from "@/lib/supabase/server";
+import { createAdminSupabase, createServerSupabase } from "@/lib/supabase/server";
 import { ERRORS } from "@/lib/constants";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -6,10 +6,23 @@ import { NextRequest, NextResponse } from "next/server";
  * GET /api/qr/resolve?code={shortCode}
  *
  * Resolves a short QR code (e.g. "k7Hm9xPq") to the full HMAC-signed token.
- * The student scanner calls this after reading the short code from the QR.
+ * Requires authentication — only logged-in students can resolve QR codes.
  */
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication to prevent brute-force enumeration
+    const supabase = createServerSupabase();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: ERRORS.AUTH_REQUIRED },
+        { status: 401 }
+      );
+    }
+
     const code = request.nextUrl.searchParams.get("code");
 
     if (!code || code.length < 4) {

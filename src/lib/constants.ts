@@ -1,8 +1,14 @@
 /** Default QR rotation period in seconds */
 export const DEFAULT_QR_ROTATION_SEC = 30;
 
-/** QR Secret used for HMAC signing (fallback for dev, must be set in production) */
-export const QR_SECRET = process.env.QR_SECRET || "dev-qr-secret-change-me";
+/** QR Secret used for HMAC signing — must be set via environment variable */
+export const QR_SECRET = (() => {
+  const secret = process.env.QR_SECRET;
+  if (!secret && process.env.NODE_ENV === "production") {
+    throw new Error("QR_SECRET must be set in production");
+  }
+  return secret || "dev-qr-secret-change-me";
+})();
 
 /** App base URL */
 export const APP_URL =

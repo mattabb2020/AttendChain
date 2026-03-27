@@ -18,7 +18,7 @@ export async function GET(
   try {
     const { recordHash } = params;
 
-    if (!recordHash || recordHash.length !== 64) {
+    if (!recordHash || !/^[0-9a-f]{64}$/.test(recordHash)) {
       return NextResponse.json(
         { error: "Hash inválido. Debe ser un hash SHA-256 de 64 caracteres." },
         { status: 400 }
@@ -30,7 +30,7 @@ export async function GET(
     // Check database
     const { data: checkin } = await admin
       .from("checkins")
-      .select("*, attendees(display_name), sessions(*, classes(title))")
+      .select("record_hash, onchain_status, tx_hash, created_at, sessions(classes(title))")
       .eq("record_hash", recordHash)
       .single();
 

@@ -86,12 +86,19 @@ export async function recordOnChain(
     throw new Error(`Transaction failed: ${result.status}`);
   }
 
-  // Poll for confirmation
+  // Poll for confirmation (max 30 seconds to prevent infinite loops)
   const txHash = result.hash;
   let getResult = await server.getTransaction(txHash);
-  while (getResult.status === "NOT_FOUND") {
+  let attempts = 0;
+  const MAX_POLL_ATTEMPTS = 30;
+  while (getResult.status === "NOT_FOUND" && attempts < MAX_POLL_ATTEMPTS) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     getResult = await server.getTransaction(txHash);
+    attempts++;
+  }
+
+  if (getResult.status === "NOT_FOUND") {
+    throw new Error(`Transaction confirmation timed out after ${MAX_POLL_ATTEMPTS}s: ${txHash}`);
   }
 
   if (getResult.status === "FAILED") {

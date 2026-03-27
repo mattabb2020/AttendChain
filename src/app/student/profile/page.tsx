@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import PageShell from "@/components/layout/PageShell";
 import StatusBadge from "@/components/ui/StatusBadge";
-import HashDisplay from "@/components/ui/HashDisplay";
 import { createClient } from "@/lib/supabase/client";
 
 interface CheckinRecord {
@@ -37,6 +36,30 @@ function getInitials(name: string): string {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+}
+
+function CopyHashButton({ hash }: { hash: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(hash);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${
+        copied
+          ? "text-emerald-600 bg-emerald-50"
+          : "text-gray-500 bg-gray-100 hover:bg-gray-200"
+      }`}
+    >
+      <span className="material-symbols-outlined text-[15px]">
+        {copied ? "check" : "content_copy"}
+      </span>
+      {copied ? "Copiado" : "Copiar Hash"}
+    </button>
+  );
 }
 
 export default function StudentProfilePage() {
@@ -186,13 +209,16 @@ export default function StudentProfilePage() {
                           <StatusBadge status={c.onchain_status} />
                         </div>
 
-                        {/* Hash row */}
-                        <div className="min-w-0">
-                          <HashDisplay hash={c.record_hash} />
+                        {/* Hash (short) */}
+                        <div className="bg-gray-50 rounded-lg px-3 py-2">
+                          <code className="font-label text-[11px] text-gray-400">
+                            {c.record_hash.slice(0, 16)}...{c.record_hash.slice(-8)}
+                          </code>
                         </div>
 
                         {/* Action buttons */}
                         <div className="flex items-center gap-2 pt-1">
+                          <CopyHashButton hash={c.record_hash} />
                           <Link
                             href={`/verify/${c.record_hash}`}
                             className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-primary bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors"

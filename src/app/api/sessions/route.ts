@@ -14,6 +14,10 @@ export async function GET() {
       return NextResponse.json({ error: ERRORS.AUTH_REQUIRED }, { status: 401 });
     }
 
+    if (user.user_metadata?.role !== "organizer") {
+      return NextResponse.json({ error: "Acceso denegado." }, { status: 403 });
+    }
+
     const { data: session, error } = await supabase
       .from("sessions")
       .select("*, classes(title)")
@@ -50,6 +54,10 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: ERRORS.AUTH_REQUIRED }, { status: 401 });
+    }
+
+    if (user.user_metadata?.role !== "organizer") {
+      return NextResponse.json({ error: "Acceso denegado." }, { status: 403 });
     }
 
     const { classId, qrRotationSeconds } = await request.json();
@@ -99,6 +107,10 @@ export async function PATCH() {
 
     if (!user) {
       return NextResponse.json({ error: ERRORS.AUTH_REQUIRED }, { status: 401 });
+    }
+
+    if (user.user_metadata?.role !== "organizer") {
+      return NextResponse.json({ error: "Acceso denegado." }, { status: 403 });
     }
 
     const { data: session, error } = await supabase

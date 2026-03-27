@@ -24,6 +24,10 @@ export async function GET(
       return NextResponse.json({ error: ERRORS.AUTH_REQUIRED }, { status: 401 });
     }
 
+    if (user.user_metadata?.role !== "organizer") {
+      return NextResponse.json({ error: "Acceso denegado." }, { status: 403 });
+    }
+
     // Verify the session exists, is OPEN, and belongs to this organizer
     const { data: session, error } = await supabase
       .from("sessions")
@@ -67,7 +71,6 @@ export async function GET(
       .eq("session_id", session.id);
 
     return NextResponse.json({
-      token,
       qrCode: `AC:${shortCode}`,
       expiresAt,
       rotationSeconds: session.qr_rotation_seconds,
