@@ -186,19 +186,19 @@ export default function StudentProfilePage() {
                           <StatusBadge status={c.onchain_status} />
                         </div>
 
-                        {/* Bottom row: hash + verify */}
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="min-w-0 flex-1">
-                            <HashDisplay hash={c.record_hash} />
-                          </div>
+                        {/* Hash row */}
+                        <div className="min-w-0">
+                          <HashDisplay hash={c.record_hash} />
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="flex items-center gap-2 pt-1">
                           <Link
                             href={`/verify/${c.record_hash}`}
-                            className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-lg text-primary hover:bg-primary/5 transition-colors"
-                            title="Verificar"
+                            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-primary bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors"
                           >
-                            <span className="material-symbols-outlined text-[20px]">
-                              open_in_new
-                            </span>
+                            <span className="material-symbols-outlined text-[15px]">verified</span>
+                            Verificar
                           </Link>
                         </div>
                       </div>

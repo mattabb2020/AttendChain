@@ -18,16 +18,16 @@ export default function HashDisplay({ hash }: { hash: string }) {
       </code>
       <button
         onClick={handleCopy}
-        className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-md transition-colors ${
+        className={`flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${
           copied
-            ? "text-emerald-500 bg-emerald-50"
+            ? "text-emerald-600 bg-emerald-50"
             : "text-gray-400 hover:text-primary hover:bg-gray-100"
         }`}
-        title={copied ? "Copiado" : "Copiar"}
       >
-        <span className="material-symbols-outlined text-[15px]">
+        <span className="material-symbols-outlined text-[14px]">
           {copied ? "check" : "content_copy"}
         </span>
+        {copied ? "Copiado" : "Copiar"}
       </button>
     </div>
   );
