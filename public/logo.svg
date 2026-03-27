@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 48" width="300" height="48">
+  <defs>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#004ac6"/>
+      <stop offset="100%" stop-color="#006c49"/>
+    </linearGradient>
+  </defs>
+  <!-- verified_user outlined icon (matches Material Symbols default weight) -->
+  <g transform="translate(4, 4) scale(1.67)">
+    <!-- Shield outline -->
+    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5L12 1zm0 2.18l7 3.12v4.7c0 4.83-2.93 9.36-7 10.93-4.07-1.57-7-6.1-7-10.93V6.3l7-3.12z" fill="#004ac6"/>
+    <!-- Checkmark inside -->
+    <path d="M10 17l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" fill="#004ac6"/>
+  </g>
+  <!-- AttendChain text with gradient -->
+  <text x="52" y="33" font-family="Manrope, Inter, system-ui, -apple-system, sans-serif" font-weight="800" font-size="26" letter-spacing="-0.5" fill="url(#textGrad)">AttendChain</text>
+</svg>
