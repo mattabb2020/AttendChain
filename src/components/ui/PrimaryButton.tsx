@@ -6,7 +6,7 @@ interface PrimaryButtonProps {
   type?: "button" | "submit";
   loading?: boolean;
   disabled?: boolean;
-  variant?: "primary" | "secondary" | "outline";
+  variant?: "primary" | "secondary" | "outline" | "ghost";
   className?: string;
 }
 
@@ -20,15 +20,17 @@ export default function PrimaryButton({
   className = "",
 }: PrimaryButtonProps) {
   const base =
-    "min-h-[44px] px-6 py-3 rounded-xl font-semibold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2";
+    "min-h-[48px] px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-150 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2";
 
   const variants = {
     primary:
-      "bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-lg shadow-primary/20 hover:shadow-xl",
+      "bg-primary text-white shadow-md shadow-primary/15 hover:bg-primary/90 hover:shadow-lg",
     secondary:
-      "bg-secondary text-on-secondary shadow-lg shadow-secondary/20 hover:shadow-xl",
+      "bg-emerald-600 text-white shadow-md shadow-emerald-600/15 hover:bg-emerald-500 hover:shadow-lg",
     outline:
-      "text-primary border border-primary/20 hover:bg-primary/5",
+      "border-2 border-gray-200 text-gray-700 hover:border-primary hover:text-primary bg-white",
+    ghost:
+      "text-gray-500 hover:text-gray-900 hover:bg-gray-100",
   };
 
   return (
