@@ -41,3 +41,6 @@ next-env.d.ts
 
 # soroban build artifacts
 /soroban-contract/target/
+
+# claude code
+.claude/
