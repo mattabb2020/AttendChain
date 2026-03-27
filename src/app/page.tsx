@@ -71,13 +71,22 @@ export default function Home() {
             transparente y definitivo.
           </p>
 
-          <Link
-            href="/analytics"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary/20 text-primary text-sm font-semibold hover:bg-primary/5 transition-colors"
-          >
-            <span className="material-symbols-outlined text-base">analytics</span>
-            MVP Dashboard
-          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/analytics"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary/20 text-primary text-sm font-semibold hover:bg-primary/5 transition-colors"
+            >
+              <span className="material-symbols-outlined text-base">analytics</span>
+              MVP Dashboard
+            </Link>
+            <Link
+              href="/about"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-secondary/20 text-secondary text-sm font-semibold hover:bg-secondary/5 transition-colors"
+            >
+              <span className="material-symbols-outlined text-base">description</span>
+              Descripcion del MVP
+            </Link>
+          </div>
 
         </div>
       </section>
