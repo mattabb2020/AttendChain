@@ -35,7 +35,7 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
           <span className="material-symbols-outlined text-primary text-[22px]">
             verified_user
           </span>
-          <span className="text-lg font-extrabold tracking-tight text-primary font-headline">
+          <span className="text-lg font-extrabold tracking-tight font-headline text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
             AttendChain
           </span>
         </Link>

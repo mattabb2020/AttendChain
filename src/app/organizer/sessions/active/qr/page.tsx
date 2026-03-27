@@ -103,7 +103,7 @@ function QrDisplayContent() {
           <span className="material-symbols-outlined text-primary">
             verified_user
           </span>
-          <span className="font-headline font-extrabold text-xl text-primary">
+          <span className="font-headline font-extrabold text-xl text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
             AttendChain
           </span>
         </div>
