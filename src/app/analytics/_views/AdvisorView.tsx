@@ -60,7 +60,15 @@ export default function AdvisorView() {
             <p className="text-xs text-on-surface-variant mt-0.5">Estudiantes ordenados por puntaje de riesgo</p>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
+              <colgroup>
+                <col className="w-[18%]" />
+                <col className="w-[10%]" />
+                <col className="w-[18%]" />
+                <col className="w-[28%]" />
+                <col className="w-[13%]" />
+                <col className="w-[13%]" />
+              </colgroup>
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/50">
                   <SortHeader label="Estudiante" sortKey="nombre" current={sortKey} asc={sortAsc} onClick={handleSort} />
@@ -84,7 +92,7 @@ export default function AdvisorView() {
                     <td className="px-4 py-3">
                       <RiskBadge score={s.score} size="sm" showLabel={false} />
                     </td>
-                    <td className="px-4 py-3 text-on-surface-variant whitespace-nowrap">{s.curso}</td>
+                    <td className="px-4 py-3 text-on-surface-variant truncate" title={s.curso}>{s.curso}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         {s.razones.map((r, i) => (

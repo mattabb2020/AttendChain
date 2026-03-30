@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export type Tab = "overview" | "advisor" | "course" | "student";
 
 interface SidebarNavProps {
@@ -21,7 +23,7 @@ export default function SidebarNav({ activeTab, onTabChange }: SidebarNavProps) 
       <aside className="hidden lg:flex flex-col w-64 bg-slate-900 text-white min-h-screen fixed left-0 top-0 z-30">
         {/* Logo */}
         <div className="px-6 py-6 border-b border-slate-700/50">
-          <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
               <span className="material-symbols-outlined text-white text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>
                 verified
@@ -31,7 +33,7 @@ export default function SidebarNav({ activeTab, onTabChange }: SidebarNavProps) 
               <h1 className="text-base font-headline font-bold tracking-tight">AttendChain</h1>
               <p className="text-[10px] text-slate-400 font-label uppercase tracking-widest">Analytics</p>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Nav items */}
@@ -80,12 +82,14 @@ export default function SidebarNav({ activeTab, onTabChange }: SidebarNavProps) 
       {/* Mobile top tabs */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-slate-900 border-b border-slate-700/50">
         <div className="px-4 py-3 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-            <span className="material-symbols-outlined text-white text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
-              verified
-            </span>
-          </div>
-          <h1 className="text-sm font-headline font-bold text-white">AttendChain Analytics</h1>
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+              <span className="material-symbols-outlined text-white text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
+                verified
+              </span>
+            </div>
+            <h1 className="text-sm font-headline font-bold text-white">AttendChain Analytics</h1>
+          </Link>
           <div className="ml-auto px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/25">
             <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider">Demo</span>
           </div>

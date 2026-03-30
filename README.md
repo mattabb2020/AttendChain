@@ -1,74 +1,87 @@
 # ⛓️ AttendChain
 
-> Asistencia verificable en blockchain. QR rotativo + Smart Contract Soroban en Stellar Testnet.
+> Blockchain-verified attendance. Rotating QR + Soroban Smart Contract on Stellar Testnet.
+
+🏆 **2nd Place Winner** at the [Stellar Vendimia Tech Hackathon](https://dorahacks.io/buidl/41900) in Mendoza, Argentina.
 
 🌐 **Live:** [www.attendchain.com](https://www.attendchain.com)
-📜 **Contrato:** [Ver en Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBV35SVYVYIHD4KSKRC6U3KYS7OY3TCY4FHSVLWMXM3OM45POAHQ4TVA)
+📜 **Contract:** [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBV35SVYVYIHD4KSKRC6U3KYS7OY3TCY4FHSVLWMXM3OM45POAHQ4TVA)
+📖 **MVP Description:** [attendchain.com/about](https://www.attendchain.com/about)
 
 ---
 
-## ❌ Problema
+## ❌ Problem
 
-Los registros de asistencia tradicionales son manipulables. No hay forma de verificar de manera independiente si alguien realmente asistio. Las instituciones pueden reescribir los registros sin dejar rastro.
+Traditional attendance records are easy to manipulate. There is no way to independently verify whether someone actually attended. Institutions can rewrite records without leaving a trace.
 
-## ✅ Solucion
+## ✅ Solution
 
-AttendChain convierte cada check-in de asistencia en evidencia inmutable y verificable:
+AttendChain turns every attendance check-in into immutable, verifiable evidence:
 
-1. 📱 **QR Rotativo** — Cambia cada 30 segundos. Solo presentes pueden escanearlo.
-2. 🔐 **Hash SHA-256** — Cada check-in genera una huella digital criptografica unica.
-3. ⛓️ **Smart Contract Soroban** — El hash se registra invocando `record_attendance` en un contrato desplegado en Stellar Testnet.
-4. 🔍 **Verificacion Publica** — Cualquier persona puede verificar un registro con el `recordHash`, sin necesidad de autenticacion.
-5. 📊 **Dashboard Analitico** — Panel institucional con KPIs academicos, asesor de riesgo, salud del curso y perfil individual de estudiantes.
+1. 📱 **Rotating QR** — Changes every 30 seconds. Only those present can scan it.
+2. 🔐 **SHA-256 Hash** — Each check-in generates a unique cryptographic fingerprint.
+3. ⛓️ **Soroban Smart Contract** — The hash is recorded by invoking `record_attendance` on a contract deployed to Stellar Testnet.
+4. 🔍 **Public Verification** — Anyone can verify a record using the `recordHash`, no authentication required.
+5. 📊 **Analytics Dashboard** — Institutional panel with academic KPIs, risk advisor, course health, and individual student profiles.
+
+---
+
+## 🏆 Hackathon
+
+AttendChain won **2nd place** at the **Stellar Vendimia Tech Hackathon** in Mendoza, Argentina, earning a cash prize.
+
+- 🔗 **DoraHacks:** [View project on DoraHacks](https://dorahacks.io/buidl/41900)
+- 📖 **About:** [MVP Description](https://www.attendchain.com/about)
+- 💬 **Contact:** Reach Matias on Telegram [@m8tias](https://t.me/m8tias)
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Capa | Tecnologia |
-|------|-----------|
+| Layer | Technology |
+|-------|-----------|
 | 🖥️ Frontend | Next.js 14 (App Router) + TypeScript + Tailwind CSS |
-| 🗄️ Base de datos | Supabase (PostgreSQL + Row Level Security) |
+| 🗄️ Database | Supabase (PostgreSQL + Row Level Security) |
 | ⛓️ Blockchain | Stellar Testnet + Soroban Smart Contract (Rust) |
 | 📦 SDK | `@stellar/stellar-sdk` v14 (`contract.Client`) |
-| 🔑 Autenticacion | Supabase Auth (email) + middleware role-based |
-| 🚀 Deploy | Vercel (serverless) |
+| 🔑 Authentication | Supabase Auth (email) + role-based middleware |
+| 🚀 Deployment | Vercel (serverless) |
 
 ---
 
-## ⛓️ Integracion Stellar / Soroban
+## ⛓️ Stellar / Soroban Integration
 
-El contrato Soroban (`soroban-contract/src/lib.rs`) se invoca directamente desde el backend:
+The Soroban contract (`soroban-contract/src/lib.rs`) is invoked directly from the backend:
 
-| Funcion | Tipo | Uso |
-|---------|------|-----|
-| `record_attendance(admin, record_hash, session_hash, ts)` | ✍️ Escritura | Registra asistencia on-chain. Requiere auth del admin. Idempotente. |
-| `has(record_hash)` | 👁️ Lectura | Verifica si un registro existe (simulacion, sin tx). |
-| `get(record_hash)` | 👁️ Lectura | Obtiene `(session_hash, timestamp)` de un registro. |
-| `bump(record_hash)` | ✍️ Escritura | Extiende el TTL de un registro. |
-| `upgrade(admin, new_wasm_hash)` | ✍️ Escritura | Actualiza el WASM del contrato. Solo admin. |
+| Function | Type | Usage |
+|----------|------|-------|
+| `record_attendance(admin, record_hash, session_hash, ts)` | ✍️ Write | Records attendance on-chain. Requires admin auth. Idempotent. |
+| `has(record_hash)` | 👁️ Read | Checks if a record exists (simulation, no tx). |
+| `get(record_hash)` | 👁️ Read | Returns `(session_hash, timestamp)` for a record. |
+| `bump(record_hash)` | ✍️ Write | Extends the TTL of a record. |
+| `upgrade(admin, new_wasm_hash)` | ✍️ Write | Upgrades the contract WASM. Admin only. |
 
-- 🔗 **`contract.Client.from()`** obtiene la spec del contrato on-chain y genera metodos dinamicos
-- ✍️ **`basicNodeSigner`** firma transacciones y auth entries server-side
-- 🔒 **Firma institucional** — la secret key nunca llega al browser
-- 🌍 **Verificacion publica** — cualquiera puede verificar un hash sin autenticacion
+- 🔗 **`contract.Client.from()`** fetches the contract spec on-chain and generates dynamic methods
+- ✍️ **`basicNodeSigner`** signs transactions and auth entries server-side
+- 🔒 **Institutional signing** — the secret key never reaches the browser
+- 🌍 **Public verification** — anyone can verify a hash without authentication
 
 ---
 
-## 📊 Dashboard Analitico
+## 📊 Analytics Dashboard
 
-Panel institucional en `/analytics` con cuatro vistas:
+Institutional panel at `/analytics` with four views:
 
-- 📈 **Vista General** — KPIs academicos y panorama de riesgo institucional
-- 🧑‍🏫 **Asesor Academico** — Cola de riesgo y gestion de casos estudiantiles
-- 📚 **Salud del Curso** — Metricas de rendimiento por seccion
-- 🎓 **Perfil Estudiante** — Detalle de riesgo y linea de tiempo individual
+- 📈 **Overview** — Academic KPIs and institutional risk panorama
+- 🧑‍🏫 **Academic Advisor** — Risk queue and student case management
+- 📚 **Course Health** — Performance metrics by section
+- 🎓 **Student Profile** — Individual risk detail and timeline
 
 ---
 
 ## 🚀 Setup
 
-### 1️⃣ Clonar e instalar
+### 1️⃣ Clone and install
 
 ```bash
 git clone https://github.com/mattabb2020/AttendChain.git
@@ -76,75 +89,75 @@ cd AttendChain
 npm install
 ```
 
-### 2️⃣ Configurar Supabase
+### 2️⃣ Configure Supabase
 
-1. Crear proyecto en [supabase.com](https://supabase.com)
-2. Ir a **Settings > API** y copiar las keys
-3. Ir a **SQL Editor** y ejecutar `supabase/schema.sql`
-4. En **Authentication > Settings** habilitar el provider de Email
+1. Create a project on [supabase.com](https://supabase.com)
+2. Go to **Settings > API** and copy the keys
+3. Go to **SQL Editor** and run `supabase/schema.sql`
+4. In **Authentication > Settings** enable the Email provider
 
-### 3️⃣ Configurar variables de entorno
+### 3️⃣ Set up environment variables
 
 ```bash
 cp .env.example .env.local
 ```
 
-Completar `.env.local` con los valores de Supabase y Stellar.
+Fill in `.env.local` with your Supabase and Stellar values.
 
-### 4️⃣ Compilar y desplegar el contrato Soroban
+### 4️⃣ Build and deploy the Soroban contract
 
-Prerequisitos: [Rust](https://rustup.rs) + target `wasm32-unknown-unknown` + [Stellar CLI](https://developers.stellar.org/docs/tools/developer-tools/cli/install-cli)
+Prerequisites: [Rust](https://rustup.rs) + target `wasm32-unknown-unknown` + [Stellar CLI](https://developers.stellar.org/docs/tools/developer-tools/cli/install-cli)
 
 ```bash
-# Instalar prerequisitos (si no los tienes)
+# Install prerequisites (if you don't have them)
 rustup target add wasm32-unknown-unknown
 cargo install --locked stellar-cli
 
-# Compilar, desplegar e inicializar el contrato
+# Build, deploy, and initialize the contract
 node scripts/deploy-contract.mjs
 ```
 
-El script compila el WASM, lo despliega a testnet, inicializa el contrato con el admin, y escribe el `CONTRACT_ID` en `.env.local`.
+The script compiles the WASM, deploys it to testnet, initializes the contract with the admin, and writes the `CONTRACT_ID` to `.env.local`.
 
-### 5️⃣ Correr localmente
+### 5️⃣ Run locally
 
 ```bash
 npm run dev
 ```
 
-Abrir [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000).
 
-### 6️⃣ Deploy a Vercel
+### 6️⃣ Deploy to Vercel
 
-1. Push a GitHub
-2. Importar en [vercel.com](https://vercel.com)
-3. Agregar las variables de entorno (incluyendo `CONTRACT_ID` e `INSTITUTION_SECRET`)
+1. Push to GitHub
+2. Import on [vercel.com](https://vercel.com)
+3. Add the environment variables (including `CONTRACT_ID` and `INSTITUTION_SECRET`)
 4. Deploy
 
 ---
 
-## 📁 Estructura del proyecto
+## 📁 Project Structure
 
 ```
 src/
 ├── app/
 │   ├── page.tsx                  # 🏠 Landing
-│   ├── auth/                     # 🔑 Login y registro
-│   ├── analytics/                # 📊 Dashboard analitico institucional
+│   ├── auth/                     # 🔑 Login and registration
+│   ├── analytics/                # 📊 Institutional analytics dashboard
 │   │   ├── _views/              # OverviewView, AdvisorView, CourseHealthView, StudentProfileView
 │   │   └── _components/         # SidebarNav
 │   ├── organizer/
-│   │   ├── dashboard/            # 📋 Dashboard del organizador
-│   │   ├── classes/new/          # ➕ Crear clase
+│   │   ├── dashboard/            # 📋 Organizer dashboard
+│   │   ├── classes/new/          # ➕ Create class
 │   │   └── sessions/
-│   │       ├── open/             # ▶️ Abrir sesion
-│   │       └── active/qr/       # 📱 QR rotativo (pantalla principal)
+│   │       ├── open/             # ▶️ Open session
+│   │       └── active/qr/       # 📱 Rotating QR (main screen)
 │   ├── student/
-│   │   ├── scan/                 # 📷 Escanear QR para check-in
-│   │   └── profile/              # 👤 Historial de asistencias
-│   ├── verify/                   # 🔍 Verificacion publica
+│   │   ├── scan/                 # 📷 Scan QR to check in
+│   │   └── profile/              # 👤 Attendance history
+│   ├── verify/                   # 🔍 Public verification
 │   └── api/                      # ⚡ API Routes (11 endpoints)
-├── components/                   # 🧩 Componentes UI reutilizables
+├── components/                   # 🧩 Reusable UI components
 ├── lib/
 │   ├── qr.ts                    # 📱 QR token generation (HMAC-SHA256)
 │   ├── hash.ts                  # 🔐 Record hash (SHA-256)
@@ -156,35 +169,35 @@ soroban-contract/
 ├── src/lib.rs                   # ⛓️ Smart contract (Rust) + tests
 ├── Cargo.toml                   # 📦 Soroban SDK 21.7.5
 scripts/
-├── deploy-contract.mjs          # 🚀 Compila, despliega e inicializa
+├── deploy-contract.mjs          # 🚀 Build, deploy, and initialize
 supabase/
 ├── schema.sql                   # 🗄️ Database schema + RLS policies
 ```
 
 ---
 
-## 🎬 Flujo de demo
+## 🎬 Demo Flow
 
-1. 🧑‍🏫 **Organizador** inicia sesion → crea clase → abre sesion → proyecta QR
-2. 📱 **QR** rota cada 30 segundos con countdown visual
-3. 🎓 **Estudiante** escanea QR → ingresa nombre → confirma asistencia
-4. ⚙️ **Backend** calcula `recordHash = SHA-256(sessionId|attendeeId|timestamp)` → invoca `record_attendance` en el contrato Soroban
-5. 🔍 **Verificacion** en `/verify/{recordHash}` consulta el contrato via `has()` + `get()` y muestra el resultado con link a Stellar Explorer
-6. 📊 **Analytics** en `/analytics` muestra KPIs, riesgo estudiantil y metricas por curso
+1. 🧑‍🏫 **Organizer** logs in → creates class → opens session → projects QR
+2. 📱 **QR** rotates every 30 seconds with a visual countdown
+3. 🎓 **Student** scans QR → enters name → confirms attendance
+4. ⚙️ **Backend** computes `recordHash = SHA-256(sessionId|attendeeId|timestamp)` → invokes `record_attendance` on the Soroban contract
+5. 🔍 **Verification** at `/verify/{recordHash}` queries the contract via `has()` + `get()` and displays the result with a link to Stellar Explorer
+6. 📊 **Analytics** at `/analytics` shows KPIs, student risk, and course metrics
 
 ---
 
-## 🛡️ Seguridad
+## 🛡️ Security
 
-- 🔐 **QR tokens** firmados con HMAC-SHA256, rotacion cada 30s
-- ⏱️ **Comparacion constant-time** (`crypto.timingSafeEqual`) contra timing attacks
-- 🛡️ **Middleware** protege rutas por rol (organizador/estudiante)
-- 🔒 **Row Level Security** en todas las tablas de Supabase
+- 🔐 **QR tokens** signed with HMAC-SHA256, rotating every 30s
+- ⏱️ **Constant-time comparison** (`crypto.timingSafeEqual`) against timing attacks
+- 🛡️ **Middleware** protects routes by role (organizer/student)
+- 🔒 **Row Level Security** on all Supabase tables
 - 🌐 **Security headers**: CSP, X-Frame-Options, HSTS, Permissions-Policy
-- ⛓️ **Contrato**: solo el admin puede escribir, operaciones idempotentes
+- ⛓️ **Contract**: only the admin can write, idempotent operations
 
 ---
 
-## 📄 Licencia
+## 📄 License
 
-Este proyecto esta licenciado bajo la [GNU Affero General Public License v3.0 (AGPL-3.0)](https://www.gnu.org/licenses/agpl-3.0.html).
+This project is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](https://www.gnu.org/licenses/agpl-3.0.html).

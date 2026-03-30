@@ -1,0 +1,186 @@
+<h2>🏆 2nd Place Winner — Stellar Vendimia Tech Hackathon (Mendoza, Argentina)</h2>
+
+<p>AttendChain won <strong>2nd place</strong> at the Stellar track of the <strong>Vendimia Tech 2026 Hackathon</strong> in Mendoza, Argentina, earning a cash prize. Built in the Social Impact track, it demonstrates how blockchain can bring transparency and trust to everyday institutional processes.</p>
+
+<hr>
+
+<h2>🔎 The Problem</h2>
+
+<p>Attendance still runs on trust.</p>
+
+<p>Universities and institutions rely on spreadsheets, static QR codes, or manual signatures — all vulnerable to:</p>
+
+<ul>
+  <li>Proxy attendance (someone scans for you)</li>
+  <li>Sharing QR screenshots</li>
+  <li>Manipulation by administrators</li>
+  <li>Lack of auditability</li>
+  <li>No third-party verification</li>
+</ul>
+
+<p>In academic settings, attendance impacts scholarships, academic standing, certifications, and institutional credibility — yet records remain centralized and editable.</p>
+
+<p>There is no cryptographic proof that "I was in class."</p>
+
+<hr>
+
+<h2>💡 The Solution — AttendChain</h2>
+
+<p>AttendChain turns attendance into cryptographically verifiable evidence.</p>
+
+<p>We built a web platform where:</p>
+
+<ul>
+  <li>A professor creates a class</li>
+  <li>A rotating QR code refreshes every ~30 seconds</li>
+  <li>Students scan and confirm</li>
+  <li>Each check-in generates a unique SHA-256 hash</li>
+  <li>The hash is anchored on Stellar (Soroban testnet)</li>
+</ul>
+
+<p>The result: an immutable, verifiable attendance record that cannot be edited, deleted, or forged — not even by us.</p>
+
+<hr>
+
+<h2>⚙️ How It Works (full end-to-end flow)</h2>
+
+<p><strong>Step 1 — Class creation</strong><br>The professor creates a class.</p>
+
+<p><strong>Step 2 — Dynamic QR generation</strong><br>A QR code rotates every ~30 seconds to prevent screenshot reuse.</p>
+
+<p><strong>Step 3 — Secure validation</strong></p>
+<ul>
+  <li>HMAC-signed QR token</li>
+  <li>Server-side validation</li>
+  <li>Anti-replay protection</li>
+</ul>
+
+<p><strong>Step 4 — Hash generation</strong><br>Attendance → SHA-256 hash</p>
+
+<p><strong>Step 5 — On-chain anchoring</strong><br>The hash is recorded via a Soroban smart contract on Stellar testnet.</p>
+
+<p><strong>Step 6 — Public verification</strong><br>Anyone can verify the attendance hash without accessing institutional databases.</p>
+
+<hr>
+
+<h2>🔐 Privacy by Design</h2>
+
+<p>We do NOT store personal data on-chain.</p>
+
+<p>Only cryptographic hashes are anchored on Stellar.</p>
+
+<ul>
+  <li>Personal information stays off-chain</li>
+  <li>The blockchain stores only proof of existence</li>
+  <li>Verification without exposing student records</li>
+</ul>
+
+<p>This enables:</p>
+
+<ul>
+  <li>A compliance-friendly architecture</li>
+  <li>Minimal data exposure</li>
+  <li>An institutional-grade security model</li>
+</ul>
+
+<hr>
+
+<h2>📊 Analytics Dashboard (demo)</h2>
+
+<p>We built a live analytics dashboard (currently with mock data) showing what universities would see once fully deployed:</p>
+
+<p>👉 <a href="https://www.attendchain.com/analytics">https://www.attendchain.com/analytics</a></p>
+
+<p>It includes:</p>
+
+<ul>
+  <li>Attendance rate per class</li>
+  <li>Anchored vs. pending records</li>
+  <li>Trends over time</li>
+  <li>Fraud attempt detection</li>
+  <li>Institutional insights</li>
+</ul>
+
+<p>This connects Web3 integrity with Web2 usability.</p>
+
+<hr>
+
+<h2>🛠 Tech Stack</h2>
+
+<ul>
+  <li><strong>Frontend:</strong> Next.js 14 (App Router) + TypeScript + Tailwind CSS</li>
+  <li><strong>Auth &amp; Database:</strong> Supabase (PostgreSQL + Row Level Security)</li>
+  <li><strong>Blockchain:</strong> Stellar Testnet</li>
+  <li><strong>Smart Contracts:</strong> Soroban (Rust)</li>
+  <li><strong>Hashing:</strong> SHA-256</li>
+  <li><strong>Security:</strong> HMAC-signed rotating QR tokens</li>
+</ul>
+
+<hr>
+
+<h2>🎯 Why This Matters</h2>
+
+<p>Most QR-based attendance systems are centralized tools with a nicer UI.</p>
+
+<p>AttendChain is different.</p>
+
+<p>We introduce:</p>
+
+<ul>
+  <li>A public verification layer</li>
+  <li>On-chain proof</li>
+  <li>Replay-resistant rotating QR</li>
+  <li>Immutable traceability</li>
+  <li>Third-party trust without database access</li>
+</ul>
+
+<p>This enables:</p>
+
+<ul>
+  <li>Academic compliance auditing</li>
+  <li>Scholarship validation</li>
+  <li>Cross-institutional recognition</li>
+  <li>Transparent attendance verification</li>
+  <li>A more trustworthy system for professors and universities</li>
+</ul>
+
+<hr>
+
+<h2>🧪 Demo Links</h2>
+
+<ul>
+  <li><strong>Product:</strong> <a href="https://www.attendchain.com/">https://www.attendchain.com/</a></li>
+  <li><strong>About / MVP Description:</strong> <a href="https://www.attendchain.com/about">https://www.attendchain.com/about</a></li>
+  <li><strong>Analytics dashboard (mock data):</strong> <a href="https://www.attendchain.com/analytics">https://www.attendchain.com/analytics</a></li>
+  <li><strong>Public verification:</strong> <a href="https://www.attendchain.com/verify">https://www.attendchain.com/verify</a></li>
+  <li><strong>GitHub:</strong> <a href="https://github.com/mattabb2020/AttendChain">https://github.com/mattabb2020/AttendChain</a></li>
+</ul>
+
+<hr>
+
+<h2>🗺 Roadmap</h2>
+
+<ul>
+  <li>University pilot programs</li>
+  <li>Mainnet deployment</li>
+  <li>LMS integrations (Moodle, Canvas)</li>
+  <li>Institutional API</li>
+  <li>Optional geofencing layer</li>
+  <li>Credential issuance integration</li>
+</ul>
+
+<hr>
+
+<h2>🤝 What We're Looking For</h2>
+
+<ul>
+  <li>Universities for pilot programs</li>
+  <li>Security audit support</li>
+  <li>Web3 ecosystem collaboration</li>
+  <li>Grants to move to mainnet</li>
+  <li>Educational ecosystem partnerships</li>
+</ul>
+
+<hr>
+
+<p>📬 For more information, contact Matias on Telegram: <a href="https://t.me/m8tias">@m8tias</a></p>
