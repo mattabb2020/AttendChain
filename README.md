@@ -32,7 +32,12 @@ AttendChain won **2nd place** at the **Stellar Vendimia Tech Hackathon** in Mend
 
 - 🔗 **DoraHacks:** [View project on DoraHacks](https://dorahacks.io/buidl/41900)
 - 📖 **About:** [MVP Description](https://www.attendchain.com/about)
-- 💬 **Contact:** Reach Matias on Telegram [@m8tias](https://t.me/m8tias)
+
+- Made with the collaboration of:
+
+xabrilcortez - Abril cortez
+mgsen - Morella Gallardo
+guadalupe276 - Guadalupe Montaña
 
 ---
 
